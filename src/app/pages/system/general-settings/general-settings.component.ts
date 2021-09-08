@@ -116,12 +116,22 @@ export class GeneralSettingsComponent implements OnInit {
     parent: this,
   };
 
-  constructor(private ws: WebSocketService, private localeService: LocaleService,
-    private sysGeneralService: SystemGeneralService, private modalService: ModalService,
-    private language: LanguageService, private dialog: DialogService, private loader: AppLoaderService,
-    private router: Router, private http: HttpClient, private storage: StorageService,
-    public mdDialog: MatDialog, private core: CoreService, private adminLayout: AdminLayoutComponent,
-    private validationService: ValidationService) { }
+  constructor(
+    private ws: WebSocketService,
+    private localeService: LocaleService,
+    private sysGeneralService: SystemGeneralService,
+    private modalService: ModalService,
+    private language: LanguageService,
+    private dialog: DialogService,
+    private loader: AppLoaderService,
+    private router: Router,
+    private http: HttpClient,
+    private storage: StorageService,
+    public mdDialog: MatDialog,
+    private core: CoreService,
+    private adminLayout: AdminLayoutComponent,
+    private validationService: ValidationService,
+  ) { }
 
   ngOnInit(): void {
     this.getDataCardData();

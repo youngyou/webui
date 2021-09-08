@@ -1877,6 +1877,34 @@
   dependencies:
     tslib "^2.0.0"
 
+"@ngrx/effects@~12.4.0":
+  version "12.4.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-12.4.0.tgz#b96a5cd397ee00e4d52e476ba13f4be2affb90f1"
+  integrity sha512-9N6c+Oj3Rghoi4JnVxqgZ581BYNCLxHK20CVX3WiiEkMXL1cyYNuXVB9+hQHJ6OSME0Jo5YoXzjsIrzFsnMZCw==
+  dependencies:
+    tslib "^2.0.0"
+
+"@ngrx/entity@~12.4.0":
+  version "12.4.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/entity/-/entity-12.4.0.tgz#7b050973e0ca35bdd1067a75fc0eabc56b26d7d9"
+  integrity sha512-TOI9GLsgOKO6GUG/GZfRkBHk0B0IP0AT2h0V2xwvlv4tUGJe6GCPQLUITNYBQyEPFluIDf2dAUyPOMsTpWmwZg==
+  dependencies:
+    tslib "^2.0.0"
+
+"@ngrx/store-devtools@~12.4.0":
+  version "12.4.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-12.4.0.tgz#dc07ab468c6943d5e4a84a3d4321d14026e8112c"
+  integrity sha512-mzT/R2gD4WaTgo1CJzRCiBeJrAcDphjqWDfIrB0Ny+Bd7OGVUsbf1jIN9dRJAA9iDXJewDiLUjKIAn/emnwg9Q==
+  dependencies:
+    tslib "^2.0.0"
+
+"@ngrx/store@~12.4.0":
+  version "12.4.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-12.4.0.tgz#5c3fb2d6fcc600db6914e955deff01a5bb9f934b"
+  integrity sha512-+kC2Ro2BmsxghHQhq4u+9HGE4BPy739werimspuqz37yUG1G3CdxMp0wuoD2M5371spUTFsXOtjKzpifOYbWbg==
+  dependencies:
+    tslib "^2.0.0"
+
 "@ngtools/webpack@12.2.2":
   version "12.2.2"
   resolved "https://registry.yarnpkg.com/@ngtools/webpack/-/webpack-12.2.2.tgz#485098f90b88fc28f5b788d69aaa3e9263e405e5"

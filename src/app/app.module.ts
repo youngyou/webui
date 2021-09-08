@@ -5,9 +5,13 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterModule } from '@angular/router';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import {
   TranslateModule, TranslateLoader, TranslateCompiler, MissingTranslationHandler,
 } from '@ngx-translate/core';
+import { environment } from 'environments/environment';
 import { MarkdownModule } from 'ngx-markdown';
 import {
   TranslateMessageFormatCompiler,
@@ -27,6 +31,7 @@ import { CoreServices } from 'app/core/services/core-services.module';
 import { CommonDirectivesModule } from 'app/directives/common/common-directives.module';
 import { ErdService } from 'app/services/erd.service';
 import { NotificationsService } from 'app/services/notifications.service';
+import { rootEffects, rootReducers } from 'app/stores';
 import { AppComponent } from './app.component';
 import { rootRouterConfig } from './app.routes';
 import { AppCommonModule } from './components/common/app-common.module';
@@ -89,6 +94,22 @@ import { WebSocketService } from './services/ws.service';
     EntityModule,
     CommonDirectivesModule,
     NgxWebstorageModule.forRoot(),
+    StoreModule.forRoot(rootReducers, {
+      runtimeChecks: {
+        strictStateImmutability: true,
+        strictActionImmutability: true,
+        strictStateSerializability: true,
+        strictActionSerializability: true,
+        strictActionWithinNgZone: true,
+        strictActionTypeUniqueness: true,
+      },
+    }),
+    StoreDevtoolsModule.instrument({
+      maxAge: 25,
+      logOnly: environment.production,
+      autoPause: true,
+    }),
+    EffectsModule.forRoot(rootEffects),
   ],
   declarations: [
     AppComponent,

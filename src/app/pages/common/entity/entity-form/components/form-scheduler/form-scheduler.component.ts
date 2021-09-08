@@ -6,17 +6,19 @@ import {
 import { FormGroup, FormControl, AbstractControl } from '@angular/forms';
 import { MatMonthView } from '@angular/material/datepicker';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import * as parser from 'cron-parser';
 import * as dateFns from 'date-fns';
 import * as dateFnsTz from 'date-fns-tz';
 import globalHelptext from 'app/helptext/global-helptext';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormSchedulerConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
 import { Field } from 'app/pages/common/entity/entity-form/models/field.interface';
 import { EntityUtils } from 'app/pages/common/entity/utils';
-import { SystemGeneralService } from 'app/services';
 import { LocaleService } from 'app/services/locale.service';
 import { WebSocketService } from 'app/services/ws.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
 interface CronPreset {
@@ -271,15 +273,20 @@ export class FormSchedulerComponent implements Field, OnInit, AfterViewInit, Aft
     }
   }
 
-  constructor(public translate: TranslateService, private renderer: Renderer2,
-    private cd: ChangeDetectorRef, public overlay: Overlay,
-    protected localeService: LocaleService, protected ws: WebSocketService,
-    private sysGeneralService: SystemGeneralService) {
+  constructor(
+    public translate: TranslateService,
+    private renderer: Renderer2,
+    private cd: ChangeDetectorRef,
+    public overlay: Overlay,
+    protected localeService: LocaleService,
+    protected ws: WebSocketService,
+    private store$: Store<AppState>,
+  ) {
     // Set default value
     this._months = '*';
 
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.timezone = res.timezone;
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.timezone = config.timezone;
       this.minDate = this.zonedTime;
       this.maxDate = dateFns.endOfMonth(this.minDate);
       this.currentDate = this.minDate;

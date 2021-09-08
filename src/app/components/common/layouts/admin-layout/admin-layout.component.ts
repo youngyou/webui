@@ -6,10 +6,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSidenav } from '@angular/material/sidenav';
 import { NavigationEnd, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { ConsolePanelModalDialog } from 'app/components/common/dialog/console-panel/console-panel-dialog.component';
 import { CoreService } from 'app/core/services/core-service/core.service';
 import { LayoutService } from 'app/core/services/layout.service';
 import { ProductType } from 'app/enums/product-type.enum';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { ForceSidenavEvent } from 'app/interfaces/events/force-sidenav-event.interface';
 import { SidenavStatusEvent } from 'app/interfaces/events/sidenav-status-event.interface';
 import { SysInfoEvent } from 'app/interfaces/events/sys-info-event.interface';
@@ -19,6 +21,7 @@ import { WebSocketService, SystemGeneralService } from 'app/services';
 import { LanguageService } from 'app/services/language.service';
 import { LocaleService } from 'app/services/locale.service';
 import { Theme, ThemeService } from 'app/services/theme/theme.service';
+import { adminAppInitialized } from 'app/stores/application/application.actions';
 
 @UntilDestroy()
 @Component({
@@ -65,6 +68,7 @@ export class AdminLayoutComponent implements OnInit, AfterViewChecked {
     private sysGeneralService: SystemGeneralService,
     private localeService: LocaleService,
     private layoutService: LayoutService,
+    private store$: Store<AppState>,
   ) {
     // detect server type
     sysGeneralService.getProductType$.pipe(untilDestroyed(this)).subscribe((res) => {
@@ -118,6 +122,8 @@ export class AdminLayoutComponent implements OnInit, AfterViewChecked {
   }
 
   ngOnInit(): void {
+    this.store$.dispatch(adminAppInitialized());
+
     this.freenasThemes = this.themeService.allThemes;
     this.currentTheme = this.themeService.currentTheme().name;
     const navigationHold = document.getElementById('scroll-area');

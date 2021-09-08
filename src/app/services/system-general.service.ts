@@ -19,11 +19,26 @@ export class SystemGeneralService {
   updateRunning = new EventEmitter<string>();
   updateRunningNoticeSent = new EventEmitter<string>();
   updateIsDone$ = new Subject();
+
+  /**
+   * @deprecated Use selectAdvancedConfig
+   */
   sendConfigData$ = new Subject<SystemGeneralConfig>();
+
+  /**
+   * @deprecated Use selectAdvancedConfig
+   */
   refreshSysGeneral$ = new Subject();
 
   // Prevent repetitive api calls in a short time when data is already available
+  /**
+   * @deprecated Use selectGeneralConfig
+   */
   generalConfigInfo: SystemGeneralConfig | { waiting: true };
+
+  /**
+   * @deprecated Use selectGeneralConfig
+   */
   getGeneralConfig$ = new Observable<SystemGeneralConfig>((observer) => {
     if (!this.ws.loggedIn) {
       return observer.next({} as SystemGeneralConfig);
@@ -51,7 +66,14 @@ export class SystemGeneralService {
     }, 2000);
   });
 
+  /**
+   * @deprecated Use selectAdvancedConfig
+   */
   advancedConfigInfo: AdvancedConfig | { waiting: true };
+
+  /**
+   * @deprecated Use selectAdvancedConfig
+   */
   getAdvancedConfig$ = new Observable<AdvancedConfig>((observer) => {
     if ((!this.advancedConfigInfo || _.isEmpty(this.advancedConfigInfo))) {
       this.advancedConfigInfo = { waiting: true };

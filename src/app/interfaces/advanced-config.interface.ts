@@ -5,6 +5,9 @@ export interface AdvancedConfig {
   autotune: boolean;
   boot_scrub: number;
   consolemenu: boolean;
+  /**
+   * @deprecated Use ui_consolemsg from SystemGeneralConfig.
+   */
   consolemsg: boolean;
   debugkernel: boolean;
   fqdn_syslog: boolean;

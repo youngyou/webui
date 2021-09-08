@@ -1,7 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { untilDestroyed, UntilDestroy } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { format, utcToZonedTime } from 'date-fns-tz';
-import { SystemGeneralService } from 'app/services/system-general.service';
+import { AppState } from 'app/interfaces/app-state.interface';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 @UntilDestroy()
 @Pipe({
@@ -13,9 +15,9 @@ export class FormatDateTimePipe implements PipeTransform {
   dateFormat = 'yyyy-MM-dd';
   timeFormat = 'HH:mm:ss';
 
-  constructor(private sysGeneralService: SystemGeneralService) {
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.timeZone = res.timezone;
+  constructor(private store$: Store<AppState>) {
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.timeZone = config.timezone;
     });
   }
 
