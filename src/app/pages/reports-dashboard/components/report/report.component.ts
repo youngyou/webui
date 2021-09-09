@@ -10,19 +10,21 @@ import {
 import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { UUID } from 'angular2-uuid';
 import { add, sub } from 'date-fns';
 import { ProductType } from 'app/enums/product-type.enum';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import { ThemeChangedEvent, ThemeDataEvent } from 'app/interfaces/events/theme-events.interface';
 import { ReportingData } from 'app/interfaces/reporting.interface';
 import { WidgetComponent } from 'app/pages/dashboard/components/widget/widget.component';
 import { LineChartComponent } from 'app/pages/reports-dashboard/components/line-chart/line-chart.component';
 import { ReportsService } from 'app/pages/reports-dashboard/reports.service';
-import { WebSocketService, SystemGeneralService } from 'app/services/';
 import { LocaleService } from 'app/services/locale.service';
 import { Theme } from 'app/services/theme/theme.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
 interface DateTime {
@@ -153,11 +155,13 @@ export class ReportComponent extends WidgetComponent implements AfterViewInit, O
     return result.toLowerCase() !== 'invalid date' ? result : null;
   }
 
-  constructor(public router: Router,
+  constructor(
+    public router: Router,
     public translate: TranslateService,
     private reportsService: ReportsService,
-    private ws: WebSocketService,
-    protected localeService: LocaleService, private sysGeneralService: SystemGeneralService) {
+    private store$: Store<AppState>,
+    protected localeService: LocaleService,
+  ) {
     super(translate);
 
     this.core.register({ observerClass: this, eventName: 'ReportData-' + this.chartId }).pipe(untilDestroyed(this)).subscribe((evt: CoreEvent) => {
@@ -180,9 +184,10 @@ export class ReportComponent extends WidgetComponent implements AfterViewInit, O
 
     this.core.emit({ name: 'ThemeDataRequest', sender: this });
 
-    this.sysGeneralService.getGeneralConfig$.pipe(
-      untilDestroyed(this),
-    ).subscribe((res) => this.timezone = res.timezone);
+    this.store$
+      .select(selectGeneralConfig)
+      .pipe(untilDestroyed(this))
+      .subscribe((config) => this.timezone = config.timezone);
   }
 
   ngOnDestroy(): void {

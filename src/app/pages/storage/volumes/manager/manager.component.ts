@@ -4,6 +4,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { DatatableComponent } from '@swimlane/ngx-datatable';
 import * as filesize from 'filesize';
@@ -12,6 +13,7 @@ import { of } from 'rxjs';
 import { filter, switchMap, take } from 'rxjs/operators';
 import { DownloadKeyModalDialog } from 'app/components/common/dialog/download-key/download-key-dialog.component';
 import helptext from 'app/helptext/storage/volumes/manager/manager';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Option } from 'app/interfaces/option.interface';
 import { Pool } from 'app/interfaces/pool.interface';
 import { VDev } from 'app/interfaces/storage.interface';
@@ -21,9 +23,10 @@ import { FormParagraphConfig } from 'app/pages/common/entity/entity-form/models/
 import { EntityJobComponent } from 'app/pages/common/entity/entity-job/entity-job.component';
 import { EntityUtils } from 'app/pages/common/entity/utils';
 import { ManagerDisk } from 'app/pages/storage/volumes/manager/manager-disk.interface';
-import { DialogService, WebSocketService, SystemGeneralService } from 'app/services';
+import { DialogService, WebSocketService } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { StorageService } from 'app/services/storage.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import { DiskComponent } from './disk/disk.component';
 import { VdevComponent } from './vdev/vdev.component';
@@ -143,7 +146,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
     public mdDialog: MatDialog,
     public translate: TranslateService,
     public sorter: StorageService,
-    private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {}
 
   duplicate(): void {
@@ -303,8 +306,8 @@ export class ManagerComponent implements OnInit, AfterViewInit {
         }
       }
     });
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.swapondrive = res.swapondrive;
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.swapondrive = config.swapondrive;
     });
     this.route.params.pipe(untilDestroyed(this)).subscribe((params) => {
       if (params['pk']) {

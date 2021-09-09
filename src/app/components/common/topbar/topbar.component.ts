@@ -6,6 +6,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -20,6 +21,7 @@ import { ProductType } from 'app/enums/product-type.enum';
 import { TrueCommandStatus } from 'app/enums/true-command-status.enum';
 import network_interfaces_helptext from 'app/helptext/network/interfaces/interfaces-list';
 import helptext from 'app/helptext/topbar';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import { NetworkInterfacesChangedEvent } from 'app/interfaces/events/network-interfaces-changed-event.interface';
 import { ResilverEvent } from 'app/interfaces/events/resilver-event.interface';
@@ -42,6 +44,7 @@ import { NotificationAlert, NotificationsService } from 'app/services/notificati
 import { SystemGeneralService } from 'app/services/system-general.service';
 import { Theme, ThemeService } from 'app/services/theme/theme.service';
 import { WebSocketService } from 'app/services/ws.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import { AboutModalDialog } from '../dialog/about/about-dialog.component';
 import { DirectoryServicesMonitorComponent } from '../dialog/directory-services-monitor/directory-services-monitor.component';
@@ -121,6 +124,7 @@ export class TopbarComponent extends ViewControllerComponent implements OnInit, 
     private mediaObserver: MediaObserver,
     private layoutService: LayoutService,
     private jobsManagerStore: JobsManagerStore,
+    private store$: Store<AppState>,
   ) {
     super();
     this.sysGenService.updateRunningNoticeSent.pipe(untilDestroyed(this)).subscribe(() => {
@@ -277,10 +281,10 @@ export class TopbarComponent extends ViewControllerComponent implements OnInit, 
   }
 
   checkLegacyUISetting(): void {
-    this.sysGenService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      if (res.legacy_ui) {
-        this.exposeLegacyUI = res.legacy_ui;
-        window.localStorage.setItem('exposeLegacyUI', res.legacy_ui as any);
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      if (config.legacy_ui) {
+        this.exposeLegacyUI = config.legacy_ui;
+        window.localStorage.setItem('exposeLegacyUI', config.legacy_ui as any);
       }
     });
   }

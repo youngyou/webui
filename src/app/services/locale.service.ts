@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { format, utcToZonedTime } from 'date-fns-tz';
 import { Subject } from 'rxjs';
 import { CoreService } from 'app/core/services/core-service/core.service';
 import { PreferencesService } from 'app/core/services/preferences.service';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import { UserPreferencesReadyEvent } from 'app/interfaces/events/user-preferences-event.interface';
 import { Option } from 'app/interfaces/option.interface';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import { SystemGeneralService } from '.';
 
@@ -21,10 +24,14 @@ export class LocaleService {
   dateTimeFormatChange$ = new Subject();
   target: Subject<CoreEvent> = new Subject();
 
-  constructor(public prefService: PreferencesService, public sysGeneralService: SystemGeneralService,
-    private core: CoreService) {
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.timeZone = res.timezone;
+  constructor(
+    public prefService: PreferencesService,
+    public sysGeneralService: SystemGeneralService,
+    private core: CoreService,
+    private store$: Store<AppState>,
+  ) {
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.timeZone = config.timezone;
     });
     if (window.localStorage.dateFormat) {
       this.dateFormat = this.formatDateTimeToDateFns(window.localStorage.getItem('dateFormat'));

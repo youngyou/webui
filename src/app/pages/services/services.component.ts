@@ -1,16 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { filter, map, switchMap } from 'rxjs/operators';
 import { ServiceName, serviceNames } from 'app/enums/service-name.enum';
 import { ServiceStatus } from 'app/enums/service-status.enum';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { QueryParams } from 'app/interfaces/query-api.interface';
 import { Service } from 'app/interfaces/service.interface';
 import { EntityTableComponent } from 'app/pages/common/entity/entity-table/entity-table.component';
 import { EntityTableAction, EntityTableConfig } from 'app/pages/common/entity/entity-table/entity-table.interface';
-import { IscsiService, SystemGeneralService, WebSocketService } from 'app/services/';
+import { IscsiService, WebSocketService } from 'app/services/';
 import { DialogService } from 'app/services/dialog.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
 interface ServiceRow extends Service {
@@ -64,7 +67,7 @@ export class Services implements EntityTableConfig, OnInit {
     private translate: TranslateService,
     private dialog: DialogService,
     private iscsiService: IscsiService,
-    private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {}
 
   resourceTransformIncomingRestData(services: Service[]): ServiceRow[] {
@@ -78,9 +81,9 @@ export class Services implements EntityTableConfig, OnInit {
   }
 
   ngOnInit(): void {
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      if (res) {
-        this.isFooterConsoleOpen = res.consolemsg;
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      if (config) {
+        this.isFooterConsoleOpen = config.consolemsg;
       }
     });
   }

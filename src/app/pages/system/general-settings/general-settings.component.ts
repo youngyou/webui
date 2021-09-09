@@ -2,10 +2,12 @@ import { Component, OnInit, Type } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { CoreService } from 'app/core/services/core-service/core.service';
 import { helptext_system_general as helptext } from 'app/helptext/system/general';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import { NtpServer } from 'app/interfaces/ntp-server.interface';
 import { WebsocketError } from 'app/interfaces/websocket-error.interface';
@@ -25,6 +27,7 @@ import {
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { LocaleService } from 'app/services/locale.service';
 import { ModalService } from 'app/services/modal.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { GuiFormComponent } from './gui-form/gui-form.component';
 import { LocalizationFormComponent } from './localization-form/localization-form.component';
 
@@ -117,6 +120,7 @@ export class GeneralSettingsComponent implements OnInit {
     private router: Router,
     public mdDialog: MatDialog,
     private core: CoreService,
+    private store$: Store<AppState>,
   ) { }
 
   ngOnInit(): void {
@@ -170,28 +174,31 @@ export class GeneralSettingsComponent implements OnInit {
   }
 
   getDataCardData(): void {
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.configData = res;
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.configData = config;
       this.dataCards = [
         {
           title: helptext.guiTitle,
           id: 'gui',
           items: [
-            { label: helptext.stg_guicertificate.placeholder, value: res.ui_certificate.name },
-            { label: helptext.stg_guiaddress.placeholder, value: res.ui_address.join(', ') },
-            { label: helptext.stg_guiv6address.placeholder, value: res.ui_v6address.join(', ') },
-            { label: helptext.stg_guihttpsport.placeholder, value: res.ui_httpsport },
-            { label: helptext.stg_guihttpsprotocols.placeholder, value: res.ui_httpsprotocols.join(', ') },
-            { label: helptext.stg_guihttpsredirect.placeholder, value: res.ui_httpsredirect as any },
+            { label: helptext.stg_guicertificate.placeholder, value: config.ui_certificate.name },
+            { label: helptext.stg_guiaddress.placeholder, value: config.ui_address.join(', ') },
+            { label: helptext.stg_guiv6address.placeholder, value: config.ui_v6address.join(', ') },
+            { label: helptext.stg_guihttpsport.placeholder, value: config.ui_httpsport },
+            { label: helptext.stg_guihttpsprotocols.placeholder, value: config.ui_httpsprotocols.join(', ') },
+            { label: helptext.stg_guihttpsredirect.placeholder, value: config.ui_httpsredirect as any },
             {
               label: helptext.crash_reporting.placeholder,
-              value: res.crash_reporting ? helptext.enabled : helptext.disabled,
+              value: config.crash_reporting ? helptext.enabled : helptext.disabled,
             },
             {
               label: helptext.usage_collection.placeholder,
-              value: res.usage_collection ? helptext.enabled : helptext.disabled,
+              value: config.usage_collection ? helptext.enabled : helptext.disabled,
             },
-            { label: helptext.consolemsg_placeholder, value: res.ui_consolemsg ? helptext.enabled : helptext.disabled },
+            {
+              label: helptext.consolemsg_placeholder,
+              value: config.ui_consolemsg ? helptext.enabled : helptext.disabled,
+            },
           ],
           actions: [
             { label: helptext.actions.save_config, value: 'saveConfig', icon: 'save_alt' },
@@ -208,11 +215,11 @@ export class GeneralSettingsComponent implements OnInit {
             title: helptext.localeTitle,
             id: 'localization',
             items: [
-              { label: helptext.stg_language.placeholder, value: languages[res.language] },
-              { label: helptext.date_format.placeholder, value: this.localeService.getDateAndTime(res.timezone)[0] },
-              { label: helptext.time_format.placeholder, value: this.localeService.getDateAndTime(res.timezone)[1] },
-              { label: helptext.stg_timezone.placeholder, value: res.timezone },
-              { label: helptext.stg_kbdmap.placeholder, value: res.kbdmap ? keyboardMap.label : helptext.default },
+              { label: helptext.stg_language.placeholder, value: languages[config.language] },
+              { label: helptext.date_format.placeholder, value: this.localeService.getDateAndTime(config.timezone)[0] },
+              { label: helptext.time_format.placeholder, value: this.localeService.getDateAndTime(config.timezone)[1] },
+              { label: helptext.stg_timezone.placeholder, value: config.timezone },
+              { label: helptext.stg_kbdmap.placeholder, value: config.kbdmap ? keyboardMap.label : helptext.default },
             ],
           };
           this.dataCards.push(this.localeData);

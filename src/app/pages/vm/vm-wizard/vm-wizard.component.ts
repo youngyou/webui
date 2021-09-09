@@ -5,6 +5,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { MatStepper } from '@angular/material/stepper';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import * as _ from 'lodash';
 import { combineLatest, Observable } from 'rxjs';
@@ -19,6 +20,7 @@ import {
 import globalHelptext from 'app/helptext/global-helptext';
 import add_edit_helptext from 'app/helptext/vm/devices/device-add-edit';
 import helptext from 'app/helptext/vm/vm-wizard/vm-wizard';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Device } from 'app/interfaces/device.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { WizardConfiguration } from 'app/interfaces/entity-wizard.interface';
@@ -33,12 +35,13 @@ import { forbiddenValues } from 'app/pages/common/entity/entity-form/validators/
 import { EntityWizardComponent } from 'app/pages/common/entity/entity-wizard/entity-wizard.component';
 import { EntityUtils } from 'app/pages/common/entity/utils';
 import {
-  NetworkService, StorageService, SystemGeneralService, WebSocketService,
+  NetworkService, StorageService, WebSocketService,
 } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { DialogService } from 'app/services/dialog.service';
 import { ModalService } from 'app/services/modal.service';
 import { VmService } from 'app/services/vm.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
 @UntilDestroy()
@@ -483,7 +486,7 @@ export class VMWizardComponent implements WizardConfiguration {
     protected prefService: PreferencesService,
     private translate: TranslateService,
     protected modalService: ModalService,
-    private systemGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {}
 
   preInit(entityWizard: EntityWizardComponent): void {
@@ -501,8 +504,8 @@ export class VMWizardComponent implements WizardConfiguration {
       }
     });
 
-    this.systemGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.isolatedGpuPciIds = res.isolated_gpu_pci_ids;
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.isolatedGpuPciIds = config.isolated_gpu_pci_ids;
     });
   }
 

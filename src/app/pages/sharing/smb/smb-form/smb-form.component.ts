@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import * as _ from 'lodash';
 import { combineLatest, Observable, of } from 'rxjs';
 import {
@@ -11,6 +12,7 @@ import { ProductType } from 'app/enums/product-type.enum';
 import { ServiceName } from 'app/enums/service-name.enum';
 import globalHelptext from 'app/helptext/global-helptext';
 import { helptext_sharing_smb, shared } from 'app/helptext/sharing';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { SmbPresets, SmbShare } from 'app/interfaces/smb-share.interface';
 import { EntityFormComponent } from 'app/pages/common/entity/entity-form';
@@ -19,9 +21,10 @@ import { FieldSet } from 'app/pages/common/entity/entity-form/models/fieldset.in
 import { forbiddenValues } from 'app/pages/common/entity/entity-form/validators/forbidden-values-validation';
 import { EntityUtils } from 'app/pages/common/entity/utils';
 import {
-  AppLoaderService, DialogService, SystemGeneralService, WebSocketService,
+  AppLoaderService, DialogService, WebSocketService,
 } from 'app/services';
 import { ModalService } from 'app/services/modal.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
 @UntilDestroy()
@@ -298,8 +301,8 @@ export class SMBFormComponent implements FormConfiguration {
     protected ws: WebSocketService,
     private dialog: DialogService,
     protected loader: AppLoaderService,
-    private sysGeneralService: SystemGeneralService,
     private modalService: ModalService,
+    private store$: Store<AppState>,
   ) {
     combineLatest([this.ws.call('sharing.smb.query', []), this.modalService.getRow$])
       .pipe(map(([shares, pk]) => shares.filter((share) => share.id !== pk).map((share) => share.name)))
@@ -589,7 +592,7 @@ export class SMBFormComponent implements FormConfiguration {
       }
     }, 700);
 
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((config) => {
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
       this.isBasicMode = !config.advancedmode;
       this.updateForm();
     });

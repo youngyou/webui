@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ConsolePanelModalDialog } from 'app/components/common/dialog/console-panel/console-panel-dialog.component';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { SystemGeneralService } from 'app/services/system-general.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { WebSocketService } from '../ws.service';
 
 @UntilDestroy()
@@ -28,12 +31,14 @@ export class AppLoaderComponent {
   constructor(
     public dialogRef: MatDialogRef<AppLoaderComponent>,
     private _dialog: MatDialog,
-    private _ws: WebSocketService, private sysGeneralService: SystemGeneralService,
+    private _ws: WebSocketService,
+    private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {
-    this.sysGeneralService.getAdvancedConfig$
+    this.store$.select(selectGeneralConfig)
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        if (res.consolemsg) {
+      .subscribe((config) => {
+        if (config.ui_consolemsg) {
           this.isShowConsole = true;
           this.dialogRef.updateSize('200px', '248px');
         }

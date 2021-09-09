@@ -17,15 +17,18 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { FieldSets } from 'app/pages/common/entity/entity-form/classes/field-sets';
 import { WebSocketService, SystemGeneralService, DialogService } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import { EntityTemplateDirective } from '../entity-template.directive';
 import { EntityUtils } from '../utils';
@@ -105,6 +108,7 @@ export class EntityFormComponent implements OnInit, OnDestroy, OnChanges, AfterV
     private modalService: ModalService,
     private cdr: ChangeDetectorRef,
     private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {
     this.loader.callStarted.pipe(untilDestroyed(this)).subscribe(() => this.showSpinner = true);
     this.loader.callDone.pipe(untilDestroyed(this)).subscribe(() => this.showSpinner = false);
@@ -200,10 +204,10 @@ export class EntityFormComponent implements OnInit, OnDestroy, OnChanges, AfterV
 
   async ngOnInit(): Promise<void> {
     // get system general setting
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      if (res) {
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      if (config) {
         if (this.conf.isBasicMode) {
-          if (res.advancedmode) {
+          if (config.advancedmode) {
             this.conf.isBasicMode = false;
           } else {
             this.conf.isBasicMode = true;

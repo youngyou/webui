@@ -4,8 +4,10 @@ import {
 import { TooltipPosition } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { filter } from 'rxjs/operators';
 import { helptext_system_bootenv } from 'app/helptext/system/boot-env';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Bootenv } from 'app/interfaces/bootenv.interface';
 import { WebsocketError } from 'app/interfaces/websocket-error.interface';
 import { DialogFormConfiguration } from 'app/pages/common/entity/entity-dialog/dialog-form-configuration.interface';
@@ -18,6 +20,7 @@ import { DialogService, WebSocketService, SystemGeneralService } from 'app/servi
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { LocaleService } from 'app/services/locale.service';
 import { StorageService } from 'app/services/storage.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import { BootenvRow } from './bootenv-row.interface';
 
@@ -56,6 +59,7 @@ export class BootEnvironmentListComponent implements EntityTableConfig {
     private storage: StorageService,
     protected localeService: LocaleService,
     private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {}
 
   columns = [
@@ -76,8 +80,8 @@ export class BootEnvironmentListComponent implements EntityTableConfig {
   };
 
   preInit(): void {
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.scrub_interval = res.boot_scrub;
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.scrub_interval = config.boot_scrub;
       this.updateBootState();
     });
   }
@@ -316,8 +320,8 @@ export class BootEnvironmentListComponent implements EntityTableConfig {
     return [{
       label: T('Stats/Settings'),
       onClick: () => {
-        this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-          this.scrub_interval = res.boot_scrub;
+        this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+          this.scrub_interval = config.boot_scrub;
           const localWS = this.ws;
           const localDialog = this.dialog;
           const statusConfigFieldConf: FieldConfig[] = [

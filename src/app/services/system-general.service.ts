@@ -30,42 +30,6 @@ export class SystemGeneralService {
    */
   refreshSysGeneral$ = new Subject();
 
-  // Prevent repetitive api calls in a short time when data is already available
-  /**
-   * @deprecated Use selectGeneralConfig
-   */
-  generalConfigInfo: SystemGeneralConfig | { waiting: true };
-
-  /**
-   * @deprecated Use selectGeneralConfig
-   */
-  getGeneralConfig$ = new Observable<SystemGeneralConfig>((observer) => {
-    if (!this.ws.loggedIn) {
-      return observer.next({} as SystemGeneralConfig);
-    }
-    if ((!this.generalConfigInfo || _.isEmpty(this.generalConfigInfo))) {
-      // Since the api call can be made many times before the first response comes back,
-      // set waiting to true to make if condition false after the first call
-      this.generalConfigInfo = { waiting: true };
-      this.ws.call('system.general.config').subscribe((configInfo) => {
-        this.generalConfigInfo = configInfo;
-        observer.next(this.generalConfigInfo);
-      });
-    } else {
-      // Check every ten ms to see if the object is ready, then stop checking and send the obj
-      const wait = setInterval(() => {
-        if (this.generalConfigInfo && !(this.generalConfigInfo as { waiting?: true }).waiting) {
-          clearInterval(wait);
-          observer.next(this.generalConfigInfo as SystemGeneralConfig);
-        }
-      }, 10);
-    }
-    // After a pause, set object to empty so calls can be made
-    setTimeout(() => {
-      this.generalConfigInfo = {} as SystemGeneralConfig;
-    }, 2000);
-  });
-
   /**
    * @deprecated Use selectAdvancedConfig
    */

@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { helptext_system_general as helptext } from 'app/helptext/system/general';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Choices } from 'app/interfaces/choices.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { Option } from 'app/interfaces/option.interface';
@@ -18,6 +20,7 @@ import {
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { LocaleService } from 'app/services/locale.service';
 import { ModalService } from 'app/services/modal.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 @UntilDestroy()
 @Component({
@@ -91,10 +94,11 @@ export class LocalizationFormComponent implements FormConfiguration {
     private sysGeneralService: SystemGeneralService,
     public localeService: LocaleService,
     private modalService: ModalService,
+    private store$: Store<AppState>,
   ) {}
 
   prerequisite(): Promise<boolean> {
-    return this.sysGeneralService.getGeneralConfig$.pipe(
+    return this.store$.select(selectGeneralConfig).pipe(
       map((configData) => {
         this.configData = configData;
         return true;

@@ -4,13 +4,16 @@ import {
 import { FormControl, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { format, utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 import { map } from 'rxjs/operators';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import helptext from '../../../../helptext/storage/snapshots/snapshots';
 import {
-  DialogService, SystemGeneralService, WebSocketService,
+  DialogService, WebSocketService,
 } from '../../../../services';
 import { EntityFormComponent } from '../../../common/entity/entity-form/entity-form.component';
 import { FieldConfig, FormSelectConfig } from '../../../common/entity/entity-form/models/field-config.interface';
@@ -84,7 +87,7 @@ export class SnapshotAddComponent implements AfterViewInit, FormConfiguration {
     protected route: ActivatedRoute,
     protected ws: WebSocketService,
     protected dialog: DialogService,
-    private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {
   }
 
@@ -128,7 +131,7 @@ export class SnapshotAddComponent implements AfterViewInit, FormConfiguration {
     const nameConfig = this.fieldConfig.find((config) => config.name === 'name');
     const namingSchemaControl = this.entityForm.formGroup.get('naming_schema');
 
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
       nameControl.setValue(
         'manual-' + format(
           utcToZonedTime(
@@ -136,10 +139,10 @@ export class SnapshotAddComponent implements AfterViewInit, FormConfiguration {
               new Date(),
               Intl.DateTimeFormat().resolvedOptions().timeZone,
             ),
-            res.timezone,
+            config.timezone,
           ),
           'yyyy-MM-dd_HH-mm',
-          { timeZone: res.timezone },
+          { timeZone: config.timezone },
         ),
       );
     });

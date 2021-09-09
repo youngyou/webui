@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { DeviceType } from 'app/enums/device-type.enum';
 import { AdvancedConfig } from 'app/interfaces/advanced-config.interface';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Device } from 'app/interfaces/device.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { EntityFormComponent } from 'app/pages/common/entity/entity-form';
@@ -11,6 +13,7 @@ import { EntityUtils } from 'app/pages/common/entity/utils';
 import { SystemGeneralService, WebSocketService } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
 @UntilDestroy()
@@ -57,6 +60,7 @@ export class IsolatedGpuPcisFormComponent implements FormConfiguration {
     protected loader: AppLoaderService,
     private sysGeneralService: SystemGeneralService,
     private modalService: ModalService,
+    private store$: Store<AppState>,
   ) { }
 
   afterInit(entityForm: EntityFormComponent): void {
@@ -72,9 +76,9 @@ export class IsolatedGpuPcisFormComponent implements FormConfiguration {
       gpusFormControl.setValue(this.isolatedGpuPciIds);
     });
 
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((adv_conf: AdvancedConfig) => {
-      this.isolatedGpuPciIds = adv_conf.isolated_gpu_pci_ids;
-      this.advancedConfig = adv_conf;
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe((config: AdvancedConfig) => {
+      this.isolatedGpuPciIds = config.isolated_gpu_pci_ids;
+      this.advancedConfig = config;
     });
 
     gpusFormControl.valueChanges.pipe(untilDestroyed(this)).subscribe((gpusValue: string[]) => {

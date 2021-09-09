@@ -1,7 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { map } from 'rxjs/operators';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Option } from 'app/interfaces/option.interface';
 import { ZfsSnapshot } from 'app/interfaces/zfs-snapshot.interface';
 import {
@@ -9,8 +11,9 @@ import {
   EntityRowDetails,
 } from 'app/pages/common/entity/entity-table/entity-row-details.interface';
 import { EntityTableComponent } from 'app/pages/common/entity/entity-table/entity-table.component';
-import { WebSocketService, StorageService, SystemGeneralService } from 'app/services';
+import { WebSocketService, StorageService } from 'app/services';
 import { LocaleService } from 'app/services/locale.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 import { SnapshotListComponent } from '../snapshot-list.component';
 
 @UntilDestroy()
@@ -31,13 +34,18 @@ export class SnapshotDetailsComponent implements EntityRowDetails<{ name: string
   details: Option[] = [];
   actions: EntityAction[] = [];
 
-  constructor(private _ws: WebSocketService, private _router: Router, private localeService: LocaleService,
-    protected storageService: StorageService, private sysGeneralService: SystemGeneralService) {}
+  constructor(
+    private ws: WebSocketService,
+    private router: Router,
+    private localeService: LocaleService,
+    protected storageService: StorageService,
+    private store$: Store<AppState>,
+  ) {}
 
   ngOnInit(): void {
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.timezone = res.timezone;
-      this._ws
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.timezone = config.timezone;
+      this.ws
         .call('zfs.snapshot.query', [[['id', '=', this.config.name]]])
         .pipe(
           map((response) => ({

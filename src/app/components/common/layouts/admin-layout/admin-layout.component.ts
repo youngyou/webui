@@ -22,6 +22,7 @@ import { LanguageService } from 'app/services/language.service';
 import { LocaleService } from 'app/services/locale.service';
 import { Theme, ThemeService } from 'app/services/theme/theme.service';
 import { adminAppInitialized } from 'app/stores/application/application.actions';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 @UntilDestroy()
 @Component({
@@ -141,9 +142,9 @@ export class AdminLayoutComponent implements OnInit, AfterViewChecked {
     if (this.media.isActive('xs') || this.media.isActive('sm')) {
       this.isSidenavOpen = false;
     }
-    this.checkIfConsoleMsgShows();
-    this.sysGeneralService.refreshSysGeneral$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.checkIfConsoleMsgShows();
+
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      this.onShowConsoleFooterBar(config.ui_consolemsg);
     });
 
     this.isSidenavCollapsed = this.layoutService.isMenuCollapsed;
@@ -193,12 +194,6 @@ export class AdminLayoutComponent implements OnInit, AfterViewChecked {
     try {
       this.footerBarScroll.nativeElement.scrollTop = this.footerBarScroll.nativeElement.scrollHeight;
     } catch (err) { }
-  }
-
-  checkIfConsoleMsgShows(): void {
-    this.sysGeneralService.getGeneralConfig$.pipe(
-      untilDestroyed(this),
-    ).subscribe((res) => this.onShowConsoleFooterBar(res.ui_consolemsg));
   }
 
   getLogConsoleMsg(): void {

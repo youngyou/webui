@@ -3,11 +3,13 @@ import { Component } from '@angular/core';
 import { FormControl, ValidatorFn } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
 import { filter, map, take } from 'rxjs/operators';
 import { ServiceName } from 'app/enums/service-name.enum';
 import { helptext_system_general as helptext } from 'app/helptext/system/general';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { Option } from 'app/interfaces/option.interface';
 import { SystemGeneralConfig, SystemGeneralConfigUpdate } from 'app/interfaces/system-config.interface';
@@ -21,6 +23,7 @@ import {
 } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 @UntilDestroy()
 @Component({
@@ -148,11 +151,12 @@ export class GuiFormComponent implements FormConfiguration {
     public http: HttpClient,
     protected storage: StorageService,
     private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
     private modalService: ModalService,
   ) {}
 
   prerequisite(): Promise<boolean> {
-    return this.sysGeneralService.getGeneralConfig$.pipe(
+    return this.store$.select(selectGeneralConfig).pipe(
       map((configData) => {
         this.configData = configData;
         return true;

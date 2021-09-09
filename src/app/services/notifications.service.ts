@@ -1,11 +1,14 @@
 import { Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import * as _ from 'lodash';
 import { Observable, Subject } from 'rxjs';
 import { AlertLevel } from 'app/enums/alert-level.enum';
 import { ApiEventMessage } from 'app/enums/api-event-message.enum';
 import { Alert } from 'app/interfaces/alert.interface';
-import { SystemGeneralService, WebSocketService } from 'app/services';
+import { AppState } from 'app/interfaces/app-state.interface';
+import { WebSocketService } from 'app/services';
+import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 export interface NotificationAlert {
   id: string;
@@ -31,15 +34,15 @@ export class NotificationsService {
 
   constructor(
     private ws: WebSocketService,
-    private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {
     this.initMe();
   }
 
   initMe(): void {
-    this.sysGeneralService.getGeneralConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      if (res.timezone !== 'WET' && res.timezone !== 'posixrules') {
-        this.timeZone = res.timezone;
+    this.store$.select(selectGeneralConfig).pipe(untilDestroyed(this)).subscribe((config) => {
+      if (config.timezone !== 'WET' && config.timezone !== 'posixrules') {
+        this.timeZone = config.timezone;
       }
 
       this.ws.call('alert.list').pipe(untilDestroyed(this)).subscribe((alerts) => {
