@@ -4,7 +4,7 @@ import { Component, OnInit, Type } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { TranslateService } from '@ngx-translate/core';
+import { Store } from '@ngrx/store';
 import * as cronParser from 'cron-parser';
 import { Subject } from 'rxjs';
 import { filter, switchMap, take } from 'rxjs/operators';
@@ -13,6 +13,7 @@ import { DeviceType } from 'app/enums/device-type.enum';
 import { helptext_system_advanced } from 'app/helptext/system/advanced';
 import { helptext_system_general as helptext } from 'app/helptext/system/general';
 import { AdvancedConfig } from 'app/interfaces/advanced-config.interface';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { Device } from 'app/interfaces/device.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import { GlobalActionConfig } from 'app/interfaces/global-action.interface';
@@ -37,6 +38,7 @@ import {
 } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 import { TunableFormComponent } from '../tunable/tunable-form/tunable-form.component';
 import { ConsoleFormComponent } from './console-form/console-form.component';
@@ -208,13 +210,13 @@ export class AdvancedSettingsComponent implements OnInit {
     private core: CoreService,
     public datePipe: DatePipe,
     protected userService: UserService,
-    private translate: TranslateService,
+    private store$: Store<AppState>,
   ) {}
 
   ngOnInit(): void {
     this.getDatasetData();
     this.getDataCardData();
-    this.sysGeneralService.refreshSysGeneral$.pipe(untilDestroyed(this)).subscribe(() => {
+    this.store$.select(selectAdvancedConfig).pipe(untilDestroyed(this)).subscribe(() => {
       this.getDatasetData();
       this.getDataCardData();
     });
@@ -446,18 +448,10 @@ export class AdvancedSettingsComponent implements OnInit {
       this.dialog
         .info(helptext_system_advanced.first_time.title, helptext_system_advanced.first_time.message)
         .pipe(untilDestroyed(this)).subscribe(() => {
-          if ([CardId.Console, CardId.Kernel, CardId.Syslog].includes(name)) {
-            this.sysGeneralService.sendConfigData(this.configData as any);
-          }
-
           this.modalService.openInSlideIn(addComponent, id);
           this.isFirstTime = false;
         });
     } else {
-      if ([CardId.Console, CardId.Kernel, CardId.Syslog].includes(name)) {
-        this.sysGeneralService.sendConfigData(this.configData as any);
-      }
-
       this.modalService.openInSlideIn(addComponent, id);
     }
   }

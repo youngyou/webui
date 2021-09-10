@@ -23,6 +23,7 @@ import {
 } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { generalConfigUpdated } from 'app/stores/system-config/system-config.actions';
 import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 @UntilDestroy()
@@ -333,7 +334,7 @@ export class GuiFormComponent implements FormConfiguration {
     return this.ws.call('system.general.update', [body]).pipe(untilDestroyed(this)).subscribe(() => {
       this.loader.close();
       this.modalService.close('slide-in-form');
-      this.sysGeneralService.refreshSysGeneral();
+      this.store$.dispatch(generalConfigUpdated());
       this.entityForm.success = true;
       this.entityForm.formGroup.markAsPristine();
       this.afterSubmit(body);

@@ -10,6 +10,7 @@ import { helptext_system_general as helptext } from 'app/helptext/system/general
 import { AppState } from 'app/interfaces/app-state.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import { NtpServer } from 'app/interfaces/ntp-server.interface';
+import { SystemGeneralConfig } from 'app/interfaces/system-config.interface';
 import { WebsocketError } from 'app/interfaces/websocket-error.interface';
 import { EntityJobComponent } from 'app/pages//common/entity/entity-job/entity-job.component';
 import { DialogFormConfiguration } from 'app/pages/common/entity/entity-dialog/dialog-form-configuration.interface';
@@ -41,7 +42,7 @@ export class GeneralSettingsComponent implements OnInit {
   supportTitle = helptext.supportTitle;
   ntpTitle = helptext.ntpTitle;
   localeData: DataCard;
-  configData: any;
+  configData: SystemGeneralConfig;
   displayedColumns: string[];
   subs: any;
   dataSource: NtpServer[];
@@ -125,9 +126,6 @@ export class GeneralSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.getDataCardData();
-    this.sysGeneralService.refreshSysGeneral$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.getDataCardData();
-    });
     this.getNTPData();
     this.modalService.refreshTable$.pipe(untilDestroyed(this)).subscribe(() => {
       this.getNTPData();
@@ -240,7 +238,6 @@ export class GeneralSettingsComponent implements OnInit {
       default:
         addComponent = LocalizationFormComponent;
     }
-    this.sysGeneralService.sendConfigData(this.configData);
     this.modalService.openInSlideIn(addComponent, id);
   }
 

@@ -4,12 +4,16 @@ import { EMPTY, forkJoin } from 'rxjs';
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { WebSocketService } from 'app/services';
 import { adminAppInitialized } from 'app/stores/application/application.actions';
-import { systemConfigLoaded } from 'app/stores/system-config/system-config.actions';
+import {
+  advancedConfigUpdated,
+  generalConfigUpdated,
+  systemConfigLoaded,
+} from 'app/stores/system-config/system-config.actions';
 
 @Injectable()
 export class SystemConfigEffects {
   loadConfig$ = createEffect(() => this.actions$.pipe(
-    ofType(adminAppInitialized),
+    ofType(adminAppInitialized, generalConfigUpdated, advancedConfigUpdated),
     mergeMap(() => {
       return forkJoin([
         this.ws.call('system.general.config'),

@@ -2,11 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { JobState } from 'app/enums/job-state.enum';
 import { helptext_system_advanced } from 'app/helptext/system/advanced';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
-import { SystemGeneralConfig } from 'app/interfaces/system-config.interface';
 import { EntityFormComponent } from 'app/pages/common/entity/entity-form';
 import { FieldConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
 import { FieldSet } from 'app/pages/common/entity/entity-form/models/fieldset.interface';
@@ -16,11 +17,11 @@ import {
   DialogService,
   LanguageService,
   StorageService,
-  SystemGeneralService,
   WebSocketService,
 } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { advancedConfigUpdated } from 'app/stores/system-config/system-config.actions';
 
 @UntilDestroy()
 @Component({
@@ -99,7 +100,6 @@ export class SyslogFormComponent implements FormConfiguration {
   ];
 
   private entityForm: EntityFormComponent;
-  private configData: SystemGeneralConfig;
   title = helptext_system_advanced.fieldset_syslog;
 
   constructor(
@@ -110,13 +110,9 @@ export class SyslogFormComponent implements FormConfiguration {
     protected loader: AppLoaderService,
     public http: HttpClient,
     protected storage: StorageService,
-    private sysGeneralService: SystemGeneralService,
     private modalService: ModalService,
-  ) {
-    this.sysGeneralService.sendConfigData$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.configData = res;
-    });
-  }
+    private store$: Store<AppState>,
+  ) {}
 
   reconnect(href: string): void {
     if (this.ws.connected) {
@@ -156,7 +152,7 @@ export class SyslogFormComponent implements FormConfiguration {
           this.entityForm.success = true;
           this.entityForm.formGroup.markAsPristine();
           this.modalService.close('slide-in-form');
-          this.sysGeneralService.refreshSysGeneral();
+          this.store$.dispatch(advancedConfigUpdated());
         }
       },
       (err) => {

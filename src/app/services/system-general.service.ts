@@ -1,14 +1,10 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import * as _ from 'lodash';
 import { Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AdvancedConfig } from 'app/interfaces/advanced-config.interface';
 import { CertificateAuthority } from 'app/interfaces/certificate-authority.interface';
 import { Certificate } from 'app/interfaces/certificate.interface';
 import { Choices } from 'app/interfaces/choices.interface';
 import { Option } from 'app/interfaces/option.interface';
-import { SystemGeneralConfig } from 'app/interfaces/system-config.interface';
-import { SystemInfo } from 'app/interfaces/system-info.interface';
 import { WebSocketService } from './ws.service';
 
 @Injectable({ providedIn: 'root' })
@@ -19,44 +15,6 @@ export class SystemGeneralService {
   updateRunning = new EventEmitter<string>();
   updateRunningNoticeSent = new EventEmitter<string>();
   updateIsDone$ = new Subject();
-
-  /**
-   * @deprecated Use selectAdvancedConfig
-   */
-  sendConfigData$ = new Subject<SystemGeneralConfig>();
-
-  /**
-   * @deprecated Use selectAdvancedConfig
-   */
-  refreshSysGeneral$ = new Subject();
-
-  /**
-   * @deprecated Use selectAdvancedConfig
-   */
-  advancedConfigInfo: AdvancedConfig | { waiting: true };
-
-  /**
-   * @deprecated Use selectAdvancedConfig
-   */
-  getAdvancedConfig$ = new Observable<AdvancedConfig>((observer) => {
-    if ((!this.advancedConfigInfo || _.isEmpty(this.advancedConfigInfo))) {
-      this.advancedConfigInfo = { waiting: true };
-      this.ws.call('system.advanced.config').subscribe((advancedConfig) => {
-        this.advancedConfigInfo = advancedConfig;
-        observer.next(this.advancedConfigInfo);
-      });
-    } else {
-      const wait = setInterval(() => {
-        if (this.advancedConfigInfo && !(this.advancedConfigInfo as { waiting: true }).waiting) {
-          clearInterval(wait);
-          observer.next(this.advancedConfigInfo as AdvancedConfig);
-        }
-      }, 10);
-    }
-    setTimeout(() => {
-      this.advancedConfigInfo = {} as AdvancedConfig;
-    }, 2000);
-  });
 
   productType = '';
   getProductType$ = new Observable<string>((observer) => {
@@ -99,10 +57,6 @@ export class SystemGeneralService {
 
   getCertificateCountryChoices(): Observable<Choices> {
     return this.ws.call('certificate.country_choices');
-  }
-
-  getSysInfo(): Observable<SystemInfo> {
-    return this.ws.call('system.info');
   }
 
   ipChoicesv4(): Observable<Option[]> {
@@ -155,14 +109,6 @@ export class SystemGeneralService {
 
   updateDone(): void {
     this.updateIsDone$.next();
-  }
-
-  sendConfigData(data: SystemGeneralConfig): void {
-    this.sendConfigData$.next(data);
-  }
-
-  refreshSysGeneral(): void {
-    this.refreshSysGeneral$.next();
   }
 
   checkRootPW(password: string): Observable<boolean> {

@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import _ from 'lodash';
 import { of, Observable } from 'rxjs';
 import { filter, switchMap } from 'rxjs/operators';
 import { ServiceName } from 'app/enums/service-name.enum';
 import { ServiceStatus } from 'app/enums/service-status.enum';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { EntityFormComponent } from 'app/pages/common/entity/entity-form';
 import { FieldSets } from 'app/pages/common/entity/entity-form/classes/field-sets';
@@ -15,6 +17,7 @@ import {
   DialogService, WebSocketService, AppLoaderService, SystemGeneralService,
 } from 'app/services';
 import { ModalService } from 'app/services/modal.service';
+import { generalConfigUpdated } from 'app/stores/system-config/system-config.actions';
 
 const poolFieldName = 'pool';
 
@@ -54,6 +57,7 @@ export class SystemDatasetPoolComponent implements FormConfiguration {
     private translate: TranslateService,
     private modalService: ModalService,
     private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) { }
 
   afterInit(entityForm: EntityFormComponent): void {
@@ -98,7 +102,7 @@ export class SystemDatasetPoolComponent implements FormConfiguration {
         this.entityForm.success = true;
         this.entityForm.formGroup.markAsPristine();
         this.modalService.close('slide-in-form');
-        this.sysGeneralService.refreshSysGeneral();
+        this.store$.dispatch(generalConfigUpdated());
       },
       error: (error) => {
         this.loader.close();

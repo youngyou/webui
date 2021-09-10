@@ -20,6 +20,7 @@ import {
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { LocaleService } from 'app/services/locale.service';
 import { ModalService } from 'app/services/modal.service';
+import { generalConfigUpdated } from 'app/stores/system-config/system-config.actions';
 import { selectGeneralConfig } from 'app/stores/system-config/system-config.selectors';
 
 @UntilDestroy()
@@ -199,7 +200,7 @@ export class LocalizationFormComponent implements FormConfiguration {
     delete body.time_format;
     this.loader.open();
     return this.ws.call('system.general.update', [body]).pipe(untilDestroyed(this)).subscribe(() => {
-      this.sysGeneralService.refreshSysGeneral();
+      this.store$.dispatch(generalConfigUpdated());
       this.loader.close();
       this.entityForm.success = true;
       this.entityForm.formGroup.markAsPristine();

@@ -6,3 +6,6 @@ export const systemConfigLoaded = createAction(
   '[System Config] Loaded',
   props<{ generalConfig: SystemGeneralConfig; advancedConfig: AdvancedConfig }>(),
 );
+
+export const generalConfigUpdated = createAction('[System Config] General Config Updated');
+export const advancedConfigUpdated = createAction('[System Config] Advanced Config Updated');

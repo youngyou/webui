@@ -1,14 +1,17 @@
 import { Component } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import * as _ from 'lodash';
 import { ProductType } from 'app/enums/product-type.enum';
 import { TunableType } from 'app/enums/tunable-type.enum';
 import { helptext_system_tunable as helptext } from 'app/helptext/system/tunable';
+import { AppState } from 'app/interfaces/app-state.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { EntityFormComponent } from 'app/pages/common/entity/entity-form/entity-form.component';
 import { FieldConfig, FormSelectConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
 import { FieldSet } from 'app/pages/common/entity/entity-form/models/fieldset.interface';
-import { SystemGeneralService, WebSocketService } from 'app/services';
+import { WebSocketService } from 'app/services';
+import { generalConfigUpdated } from 'app/stores/system-config/system-config.actions';
 import { T } from 'app/translate-marker';
 
 @UntilDestroy()
@@ -82,7 +85,10 @@ export class TunableFormComponent implements FormConfiguration {
     },
   ];
 
-  constructor(protected ws: WebSocketService, protected sysGeneralService: SystemGeneralService) {}
+  constructor(
+    protected ws: WebSocketService,
+    protected store$: Store<AppState>,
+  ) {}
 
   preInit(): void {
     this.type_fc = _.find(this.fieldSets[0].config, { name: 'type' });
@@ -105,6 +111,6 @@ export class TunableFormComponent implements FormConfiguration {
   }
 
   afterSubmit(): void {
-    this.sysGeneralService.refreshSysGeneral();
+    this.store$.dispatch(generalConfigUpdated());
   }
 }

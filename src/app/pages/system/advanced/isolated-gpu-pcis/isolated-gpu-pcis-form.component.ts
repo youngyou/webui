@@ -13,6 +13,7 @@ import { EntityUtils } from 'app/pages/common/entity/utils';
 import { SystemGeneralService, WebSocketService } from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { ModalService } from 'app/services/modal.service';
+import { advancedConfigUpdated } from 'app/stores/system-config/system-config.actions';
 import { selectAdvancedConfig } from 'app/stores/system-config/system-config.selectors';
 import { T } from 'app/translate-marker';
 
@@ -115,7 +116,7 @@ export class IsolatedGpuPcisFormComponent implements FormConfiguration {
         this.entityForm.success = true;
         this.entityForm.formGroup.markAsPristine();
         this.modalService.close('slide-in-form');
-        this.sysGeneralService.refreshSysGeneral();
+        this.store$.dispatch(advancedConfigUpdated());
       },
       (err) => {
         this.loader.close();
