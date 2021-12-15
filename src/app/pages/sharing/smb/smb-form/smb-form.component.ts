@@ -311,6 +311,13 @@ export class SMBFormComponent implements FormConfiguration {
   }
 
   resourceTransformIncomingRestData(data: SmbShare): SmbShare {
+    const generalFieldsets = _.find(this.fieldSets, { class: 'basic' });
+    const pathField = _.find(generalFieldsets.config, { name: 'purpose' }) as FormExplorerConfig;
+    if (data.cluster_volname) {
+      pathField.initial = 'CLUSTER:' + data.cluster_volname + '/';
+    } else {
+      pathField.initial = '/mnt';
+    }
     this.mangle = data.aapl_name_mangling;
     this.hostsAllowOnLoad = data.hostsallow ? [...data.hostsallow] : [];
     this.hostsDenyOnLoad = data.hostsdeny ? [...data.hostsdeny] : [];
