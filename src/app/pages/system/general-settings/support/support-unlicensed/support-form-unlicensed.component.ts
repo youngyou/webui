@@ -61,6 +61,7 @@ export class SupportFormUnlicensedComponent implements FormConfiguration {
             const authFn = (message: OauthJiraMessage): void => this.doAuth(message);
 
             window.open('https://support-proxy.ixsystems.com/oauth/initiate?origin=' + encodeURIComponent(window.location.toString()), '_blank', 'width=640,height=480');
+            window.removeAllListeners('message');
             window.addEventListener('message', authFn, false);
           },
         },
