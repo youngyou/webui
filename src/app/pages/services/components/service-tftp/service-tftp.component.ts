@@ -74,7 +74,6 @@ export class ServiceTFTPComponent implements FormConfiguration {
         {
           type: 'permissions',
           name: 'umask',
-          hideOthersPermissions: true,
           placeholder: helptext.tftp_umask_placeholder,
           tooltip: helptext.tftp_umask_tooltip,
         },
@@ -161,7 +160,7 @@ export class ServiceTFTPComponent implements FormConfiguration {
  */
 function invertUmask(data: { umask: string }): { umask: string } {
   const perm = parseInt(data['umask'], 8);
-  let mask = (~perm & 0o666).toString(8);
+  let mask = (~perm & 0o777).toString(8);
   while (mask.length < 3) {
     mask = '0' + mask;
   }

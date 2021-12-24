@@ -172,7 +172,6 @@ export interface FormParagraphConfig<P = any> extends BaseFieldConfig<P> {
 }
 
 export interface FormPermissionsConfig<P = any> extends BaseFieldConfig<P> {
-  hideOthersPermissions?: boolean;
   inputType?: string;
   options?: Option[];
   type: 'permissions';
