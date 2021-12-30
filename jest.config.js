@@ -12,12 +12,13 @@ module.exports = {
   coverageReporters: ['html'],
   coverageDirectory: 'coverage/my-app',
   moduleDirectories: ['node_modules', 'src'],
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}),
-  testPathIgnorePatterns: [
-    // "<rootDir>/node_modules/(?!date-fns-tz|date-fns)",
-    "node_modules/(?!(date-fns-tz|date-fns))",
-    "<rootDir>/dist/"
-  ],
+  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
+    // 'date-fns-tz': 'date-fns-tz/esm'
+  }),
+  // testPathIgnorePatterns: [
+  //   // "node_modules/(?!(date-fns-tz/esm))",
+  //   // "<rootDir>/dist/"
+  // ],
   // globals: {
   //   "ts-jest": {
   //     "tsconfig": "<rootDir>/tsconfig.spec.json",
