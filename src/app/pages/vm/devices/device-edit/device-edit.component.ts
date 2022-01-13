@@ -1,20 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { MatSelectChange } from '@angular/material/select';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateService } from '@ngx-translate/core';
 import * as _ from 'lodash';
+import { combineLatest } from 'rxjs';
 import { CoreService } from 'app/core/services/core-service/core.service';
 import { DatasetType } from 'app/enums/dataset-type.enum';
+import { DeviceType } from 'app/enums/device-type.enum';
 import { ProductType } from 'app/enums/product-type.enum';
 import { ServiceStatus } from 'app/enums/service-status.enum';
 import { VmDeviceType } from 'app/enums/vm.enum';
 import helptext from 'app/helptext/vm/devices/device-add-edit';
+import { Device } from 'app/interfaces/device.interface';
 import { FieldConfig, FormSelectConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
 import { EntityFormService } from 'app/pages/common/entity/entity-form/services/entity-form.service';
 import { EntityUtils } from 'app/pages/common/entity/utils';
 import { VmDeviceFieldSet } from 'app/pages/vm/vm-device-field-set.interface';
-import { WebSocketService, NetworkService, VmService } from 'app/services';
+import {
+  WebSocketService, NetworkService, VmService, SystemGeneralService,
+} from 'app/services';
 import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { DialogService } from 'app/services/dialog.service';
 
@@ -241,6 +247,9 @@ export class DeviceEditComponent implements OnInit {
   ];
 
   // pci
+
+  passThroughDeviceChoices: { [key: string]: any } = {};
+  isolatedGpus: Device[] = [];
   pciFieldConfig: FieldConfig[] = [
     {
       name: 'pptdev',
@@ -249,6 +258,25 @@ export class DeviceEditComponent implements OnInit {
       type: 'select',
       options: [],
       required: true,
+      onChangeOption: (event: { event: MatSelectChange }) => {
+        const key = (Object.keys(this.passThroughDeviceChoices || {}).find(event.event.value));
+        if (!this.passThroughDeviceChoices[key].reset_mechanism_defined) {
+          for (const gpu of this.isolatedGpus) {
+            for (const device of gpu.devices) {
+              if (device.pci_id == event.event.value) {
+                return;
+              }
+            }
+          }
+          this.dialogService.info(
+            this.translate.instant('Warning'),
+            this.translate.instant('PCI device does not has a reset mechanism defined and you may experience\
+             inconsistent/degraded behavior when starting/stopping the VM.'),
+            '500px',
+            'alert',
+          );
+        }
+      },
     },
     {
       name: 'order',
@@ -338,6 +366,7 @@ export class DeviceEditComponent implements OnInit {
     protected networkService: NetworkService,
     protected dialogService: DialogService,
     private core: CoreService,
+    private sysGeneralService: SystemGeneralService,
     protected vmService: VmService,
     protected translate: TranslateService,
   ) {}
@@ -375,9 +404,25 @@ export class DeviceEditComponent implements OnInit {
     });
 
     // pci
-    this.ws.call('vm.device.passthrough_device_choices').pipe(untilDestroyed(this)).subscribe((res) => {
+    combineLatest([
+      this.sysGeneralService.getAdvancedConfig$,
+      this.ws.call('device.get_info', [DeviceType.Gpu]),
+      this.ws.call('vm.device.passthrough_device_choices'),
+    ]).pipe(untilDestroyed(this)).subscribe(([config, devices, passthroughCohices]) => {
+      for (const pciId of config.isolated_gpu_pci_ids) {
+        for (const gpu of devices) {
+          for (const dev of gpu.devices) {
+            if (pciId == dev.pci_id) {
+              this.isolatedGpus.push(gpu);
+              break;
+            }
+          }
+        }
+      }
+      this.isolatedGpus = devices;
+      this.passThroughDeviceChoices = passthroughCohices;
       this.pptdev = _.find(this.pciFieldConfig, { name: 'pptdev' }) as FormSelectConfig;
-      this.pptdev.options = Object.keys(res || {}).map((pptdevId) => ({
+      this.pptdev.options = Object.keys(passthroughCohices || {}).map((pptdevId) => ({
         label: pptdevId,
         value: pptdevId,
       }));

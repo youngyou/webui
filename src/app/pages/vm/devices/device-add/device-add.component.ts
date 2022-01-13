@@ -272,7 +272,7 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
             this.translate.instant('PCI device does not has a reset mechanism defined and you may experience\
              inconsistent/degraded behavior when starting/stopping the VM.'),
             '500px',
-            'alert',
+            'warning',
           );
         }
       },
