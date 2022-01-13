@@ -789,6 +789,7 @@
   "Ownership": "",
   "PASSPHRASE": "",
   "PCI Passthru Device": "",
+  "PCI device does not has a reset mechanism defined and you may experience             inconsistent/degraded behavior when starting/stopping the VM.": "",
   "POSIX": "",
   "POSIX Permissions": "",
   "PULL": "",
