@@ -12,7 +12,7 @@ import { DeviceType } from 'app/enums/device-type.enum';
 import { ProductType } from 'app/enums/product-type.enum';
 import { VmBootloader, VmDeviceType } from 'app/enums/vm.enum';
 import helptext from 'app/helptext/vm/devices/device-add-edit';
-import { Device } from 'app/interfaces/device.interface';
+import { PciDevice } from 'app/interfaces/device.interface';
 import { CoreEvent } from 'app/interfaces/events';
 import {
   FieldConfig,
@@ -247,7 +247,7 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
   ];
 
   passThroughDeviceChoices: { [key: string]: any } = {};
-  isolatedGpus: Device[] = [];
+  isolatedGpusPciDevices: PciDevice[] = [];
   // pci
   pciFieldConfig: FieldConfig[] = [
     {
@@ -260,11 +260,9 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
       onChangeOption: (event: { event: MatSelectChange }) => {
         const key = (Object.keys(this.passThroughDeviceChoices || {}).find(event.event.value));
         if (!this.passThroughDeviceChoices[key].reset_mechanism_defined) {
-          for (const gpu of this.isolatedGpus) {
-            for (const device of gpu.devices) {
-              if (device.pci_id == event.event.value) {
-                return;
-              }
+          for (const pciDevice of this.isolatedGpusPciDevices) {
+            if (pciDevice.pci_id == event.event.value) {
+              return;
             }
           }
           this.dialogService.info(
@@ -435,13 +433,12 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
         for (const gpu of devices) {
           for (const dev of gpu.devices) {
             if (pciId == dev.pci_id) {
-              this.isolatedGpus.push(gpu);
+              this.isolatedGpusPciDevices.push(...gpu.devices);
               break;
             }
           }
         }
       }
-      this.isolatedGpus = devices;
       this.passThroughDeviceChoices = passthroughCohices;
       this.pptdev = _.find(this.pciFieldConfig, { name: 'pptdev' }) as FormSelectConfig;
       this.pptdev.options = Object.keys(passthroughCohices || {}).map((pptdevId) => ({
