@@ -29,7 +29,6 @@ import {
   WebSocketService, StorageService, AppLoaderService, DialogService, VmService,
 } from 'app/services';
 import { ModalService } from 'app/services/modal.service';
-import { PreferencesService } from 'app/services/preferences.service';
 import { VmWizardComponent } from '../vm-wizard/vm-wizard.component';
 
 @UntilDestroy()
