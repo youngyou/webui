@@ -6,7 +6,6 @@ import { CoreService } from 'app/services/core-service/core.service';
 import { LocaleService } from 'app/services/locale.service';
 
 export interface DialogData {
-  extraMsg: boolean;
   systemType: ProductType;
 }
 
@@ -17,7 +16,6 @@ export interface DialogData {
 })
 export class AboutDialogComponent {
   copyrightYear = this.localeService.getCopyrightYearFromBuildTime();
-  extraMsg: boolean;
   systemType: ProductType;
   helptext = helptext;
 
@@ -29,7 +27,6 @@ export class AboutDialogComponent {
     private core: CoreService,
     private localeService: LocaleService,
   ) {
-    this.extraMsg = data.extraMsg;
     this.systemType = data.systemType;
   }
 }
