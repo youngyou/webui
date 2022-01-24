@@ -20,7 +20,6 @@ import { StaticRoute } from 'app/interfaces/static-route.interface';
 import { Interval } from 'app/interfaces/timeout.interface';
 import { AppTableAction, AppTableConfig, TableComponent } from 'app/modules/entity/table/table.component';
 import { TableService } from 'app/modules/entity/table/table.service';
-import { NetworkConfigurationComponent } from 'app/pages/network/configuration/configuration.component';
 import { IpmiRow } from 'app/pages/network/network-dashboard.interface';
 import { NetworkInterfaceUi } from 'app/pages/network/network-interface-ui.interface';
 import { StaticRouteFormComponent } from 'app/pages/network/static-route-form/static-route-form.component';
@@ -35,7 +34,6 @@ import { IpmiService } from 'app/services/ipmi.service';
 import { IxSlideInService } from 'app/services/ix-slide-in.service';
 import { ModalService } from 'app/services/modal.service';
 import { EntityUtils } from '../../modules/entity/utils';
-import { CardWidgetConf } from './card-widget/card-widget.component';
 import { InterfacesFormComponent } from './forms/interfaces-form.component';
 import { IpmiFormComponent } from './forms/ipmi-form.component';
 import { OpenvpnClientComponent } from './forms/service-openvpn-client.component';
@@ -218,7 +216,6 @@ export class NetworkComponent implements OnInit, OnDestroy {
 
     this.slideInService.onClose$.pipe(untilDestroyed(this)).subscribe(() => {
       this.staticRoutesTableConf.tableComponent.getData();
-      this.getGlobalSettings();
     });
 
     this.checkInterfacePendingChanges();
@@ -547,10 +544,6 @@ export class NetworkComponent implements OnInit, OnDestroy {
         window.open(`http://${row.ipaddress}`);
       },
     }];
-  }
-
-  showConfigForm(): void {
-    this.slideInService.open(NetworkConfigurationComponent, { wide: true });
   }
 
   showInterfacesForm(id?: string): void {

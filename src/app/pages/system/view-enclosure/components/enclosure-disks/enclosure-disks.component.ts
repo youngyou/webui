@@ -50,6 +50,7 @@ import {
 import { VDevLabelsSvg } from 'app/pages/system/view-enclosure/classes/v-dev-labels-svg';
 import { ViewConfig } from 'app/pages/system/view-enclosure/interfaces/view.config';
 import { WebSocketService } from 'app/services';
+import { CoreService } from 'app/services/core-service/core.service';
 import { DialogService } from 'app/services/dialog.service';
 import { Temperature } from 'app/services/disk-temperature.service';
 import { Theme } from 'app/services/theme/theme.service';

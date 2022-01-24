@@ -623,8 +623,7 @@ export class CertificateAuthorityAddComponent implements WizardConfiguration {
 
   getSummaryValueLabel(fieldConfig: FieldConfig, value: any): any {
     if (fieldConfig.type === 'select') {
-      const config = fieldConfig;
-      const option = config.options.find((option) => option.value == value);
+      const option = fieldConfig.options.find((option) => option.value == value);
       if (option) {
         value = option.label;
       }

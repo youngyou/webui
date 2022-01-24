@@ -16,8 +16,8 @@ import helptext from 'app/helptext/storage/volumes/zvol-form';
 import { Dataset } from 'app/interfaces/dataset.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { Option } from 'app/interfaces/option.interface';
-import { AppLoaderService } from 'app/modules/app-loader/app-loader.service';
 import { QueryFilter } from 'app/interfaces/query-api.interface';
+import { AppLoaderService } from 'app/modules/app-loader/app-loader.service';
 import { EntityFormComponent } from 'app/modules/entity/entity-form/entity-form.component';
 import {
   FieldConfig,

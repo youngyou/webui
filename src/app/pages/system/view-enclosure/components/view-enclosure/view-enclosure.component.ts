@@ -16,6 +16,7 @@ import { EnclosureMetadata, SystemProfiler } from 'app/pages/system/view-enclosu
 import { ErrorMessage } from 'app/pages/system/view-enclosure/interfaces/error-message.interface';
 import { ViewConfig } from 'app/pages/system/view-enclosure/interfaces/view.config';
 import { WebSocketService } from 'app/services';
+import { CoreService } from 'app/services/core-service/core.service';
 
 @UntilDestroy()
 @Component({

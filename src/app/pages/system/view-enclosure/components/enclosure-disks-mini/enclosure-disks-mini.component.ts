@@ -11,6 +11,7 @@ import { MiniXlPlus } from 'app/pages/system/view-enclosure/classes/hardware/min
 import { EnclosureMetadata } from 'app/pages/system/view-enclosure/classes/system-profiler';
 import { EnclosureDisksComponent } from 'app/pages/system/view-enclosure/components/enclosure-disks/enclosure-disks.component';
 import { WebSocketService } from 'app/services';
+import { CoreService } from 'app/services/core-service/core.service';
 import { DialogService } from 'app/services/dialog.service';
 import { Theme } from 'app/services/theme/theme.service';
 
