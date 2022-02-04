@@ -23,6 +23,11 @@ import { OpenvpnClientComponent } from './forms/service-openvpn-client.component
 import { OpenvpnServerComponent } from './forms/service-openvpn-server.component';
 import { NetworkComponent } from './network.component';
 import { routing } from './network.routing';
+import { IxTableModule } from 'app/modules/ix-tables/ix-table.module';
+import {
+  IpmiConfigurationCardComponent,
+} from 'app/pages/network/ipmi-configuration-card/ipmi-configuration-card.component';
+import { IpmiSelFormComponent } from 'app/pages/network/ipmi-sel-form/ipmi-sel-form.component';
 
 @NgModule({
   imports: [
@@ -38,6 +43,7 @@ import { routing } from './network.routing';
     CommonDirectivesModule,
     IxFormsModule,
     CastModule,
+    IxTableModule,
   ],
   declarations: [
     StaticRouteFormComponent,
@@ -48,6 +54,8 @@ import { routing } from './network.routing';
     OpenvpnClientComponent,
     OpenvpnServerComponent,
     NetworkConfigurationCardComponent,
+    IpmiConfigurationCardComponent,
+    IpmiSelFormComponent,
   ],
   providers: [NetworkService, EntityFormService, CoreService, TranslateService],
 })

@@ -1,0 +1,47 @@
+<mat-card>
+  <mat-toolbar-row>
+    <h3>{{ 'IPMI' | translate }}</h3>
+    <div class="actions action-icon">
+      <button mat-button color="default" (click)="systemEventLog()">{{ 'System Event Log' | translate }}</button>
+    </div>
+  </mat-toolbar-row>
+  <mat-card-content>
+    <table ix-table [dataSource]="dataSource" class="mat-elevation-z0">
+      <ng-container matColumnDef="channel">
+        <th mat-header-cell *matHeaderCellDef>{{ 'Channel' | translate }}</th>
+        <td mat-cell *matCellDef="let row; dataSource: dataSource" (click)="edit(row)">{{ 'Channel' | translate }} {{ row.channel }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let row; dataSource: dataSource">
+          <button mat-icon-button type="button"
+            (click)="identify(row)"
+            aria-label="Identify Light"
+          >
+            <mat-icon>highlight</mat-icon>
+          </button>
+          <button mat-icon-button type="button"
+            *ngIf="canManage(row)"
+            (click)="manage(row)"
+            aria-label="Manage"
+          >
+            <mat-icon>launch</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-row
+        *matRowDef="let row; columns: displayedColumns; dataSource: dataSource"
+        class="clickable-row"
+      ></tr>
+
+      <tr class="mat-row no-data-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          <entity-empty [conf]="currentEmptyConf"></entity-empty>
+        </td>
+      </tr>
+    </table>
+  </mat-card-content>
+</mat-card>
+

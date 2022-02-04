@@ -1,0 +1,25 @@
+<ix-modal-header [title]="'IPMI System Event Log' | translate" [loading]="isFormLoading"></ix-modal-header>
+<mat-card>
+  <mat-card-content>
+    <div class="all-events">
+      <div *ngFor="let item of ipmiSelItems; let last = last;">
+        <li>Sensor: {{ item.sensor }}</li>
+        <li>Event: {{ item.event }}</li>
+        <li>Direction: {{ item.direction }}</li>
+        <li>Verbose: {{ item.verbose }}</li>
+        <li>{{ item.datetime| date:'YYYY-MM-dd HH:mm:ss' }}</li>
+        <hr *ngIf="!last"/>
+      </div>
+    </div>
+    
+  </mat-card-content>
+</mat-card>
+<div *ngIf="ipmiSelItems.length" class="form-actions">
+  <button
+    mat-button
+    type="submit"
+    [disabled]="isFormLoading"
+    (click)="onClearAll();"
+    color="primary"
+  >{{ 'Clear All Events' | translate }}</button>
+</div>

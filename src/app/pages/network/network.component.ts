@@ -11,7 +11,6 @@ import { ServiceStatus } from 'app/enums/service-status.enum';
 import helptext from 'app/helptext/network/interfaces/interfaces-list';
 import { CoreEvent } from 'app/interfaces/events';
 import { NetworkInterfacesChangedEvent } from 'app/interfaces/events/network-interfaces-changed-event.interface';
-import { Ipmi } from 'app/interfaces/ipmi.interface';
 import { NetworkInterface } from 'app/interfaces/network-interface.interface';
 import { NetworkSummary } from 'app/interfaces/network-summary.interface';
 import { ReportingRealtimeUpdate } from 'app/interfaces/reporting.interface';
@@ -20,7 +19,6 @@ import { StaticRoute } from 'app/interfaces/static-route.interface';
 import { Interval } from 'app/interfaces/timeout.interface';
 import { AppTableAction, AppTableConfig, TableComponent } from 'app/modules/entity/table/table.component';
 import { TableService } from 'app/modules/entity/table/table.service';
-import { IpmiRow } from 'app/pages/network/network-dashboard.interface';
 import { NetworkInterfaceUi } from 'app/pages/network/network-interface-ui.interface';
 import { StaticRouteFormComponent } from 'app/pages/network/static-route-form/static-route-form.component';
 import {
@@ -30,12 +28,10 @@ import {
   WebSocketService,
 } from 'app/services';
 import { CoreService } from 'app/services/core-service/core.service';
-import { IpmiService } from 'app/services/ipmi.service';
 import { IxSlideInService } from 'app/services/ix-slide-in.service';
 import { ModalService } from 'app/services/modal.service';
 import { EntityUtils } from '../../modules/entity/utils';
 import { InterfacesFormComponent } from './forms/interfaces-form.component';
-import { IpmiFormComponent } from './forms/ipmi-form.component';
 import { OpenvpnClientComponent } from './forms/service-openvpn-client.component';
 import { OpenvpnServerComponent } from './forms/service-openvpn-server.component';
 
@@ -171,20 +167,6 @@ export class NetworkComponent implements OnInit, OnDestroy {
     },
   };
 
-  ipmiTableConf: AppTableConfig<NetworkComponent> = {
-    title: this.translate.instant('IPMI'),
-    queryCall: 'ipmi.query',
-    columns: [{ name: this.translate.instant('Channel'), prop: 'channelLabel' }],
-    hideHeader: true,
-    parent: this,
-    dataSourceHelper: (ipmi) => this.ipmiDataSourceHelper(ipmi),
-    getActions: this.getIpmiActions.bind(this),
-    isActionVisible: this.isIpmiActionVisible,
-    edit: (row: IpmiRow) => {
-      this.modalService.openInSlideIn(IpmiFormComponent, row.id);
-    },
-  };
-
   networkSummary: NetworkSummary;
   ipmiEnabled: boolean;
 
@@ -198,7 +180,6 @@ export class NetworkComponent implements OnInit, OnDestroy {
     private modalService: ModalService,
     private translate: TranslateService,
     private tableService: TableService,
-    private ipmiService: IpmiService,
     private slideInService: IxSlideInService,
     private core: CoreService,
   ) {
@@ -249,6 +230,16 @@ export class NetworkComponent implements OnInit, OnDestroy {
           }
         });
     }
+
+    this.ws
+      .call('ipmi.is_loaded')
+      .pipe(untilDestroyed(this))
+      .subscribe((isIpmiLoaded) => {
+        // this.ipmiEnabled = isIpmiLoaded;
+
+        // TODO BV !!! Remove debugging code
+        this.ipmiEnabled = true;
+      });
   }
 
   checkInterfacePendingChanges(): void {
@@ -520,31 +511,6 @@ export class NetworkComponent implements OnInit, OnDestroy {
     });
   }
 
-  ipmiDataSourceHelper(ipmi: Ipmi[]): IpmiRow[] {
-    return ipmi.map((item) => ({
-      ...item,
-      channelLabel: this.translate.instant('Channel {n}', { n: item.channel }),
-    }));
-  }
-
-  getIpmiActions(): AppTableAction[] {
-    return [{
-      icon: 'highlight',
-      name: 'identify',
-      matTooltip: this.translate.instant('Identify Light'),
-      onClick: () => {
-        this.ipmiService.showIdentifyDialog();
-      },
-    }, {
-      icon: 'launch',
-      name: 'manage',
-      matTooltip: this.translate.instant('Manage'),
-      onClick: (row: IpmiRow) => {
-        window.open(`http://${row.ipaddress}`);
-      },
-    }];
-  }
-
   showInterfacesForm(id?: string): void {
     const interfacesForm = this.modalService.openInSlideIn(InterfacesFormComponent, id);
     interfacesForm.afterModalFormClosed = this.checkInterfacePendingChanges.bind(this);
@@ -646,13 +612,6 @@ export class NetworkComponent implements OnInit, OnDestroy {
       (name === 'start' && row.state === ServiceStatus.Running)
       || (name === 'stop' && row.state === ServiceStatus.Stopped)
     ) {
-      return false;
-    }
-    return true;
-  }
-
-  isIpmiActionVisible(name: string, row: IpmiRow): boolean {
-    if (name === 'manage' && row.ipaddress === '0.0.0.0') {
       return false;
     }
     return true;

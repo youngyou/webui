@@ -112,6 +112,7 @@ import {
   InitShutdownScript,
   UpdateInitShutdownScriptParams,
 } from 'app/interfaces/init-shutdown-script.interface';
+import { IpmiSel } from 'app/interfaces/ipmi-sel.interface';
 import { Ipmi, IpmiIdentify, IpmiUpdate } from 'app/interfaces/ipmi.interface';
 import {
   IscsiGlobalConfig,
@@ -574,6 +575,8 @@ export type ApiDirectory = {
   'ipmi.identify': { params: [IpmiIdentify]; response: void };
   'ipmi.update': { params: [id: number, update: IpmiUpdate]; response: Ipmi };
   'ipmi.query': { params: QueryParams<Ipmi>; response: Ipmi[] };
+  'ipmi.query_sel': { params: void; response: IpmiSel[] };
+  'ipmi.clear_sel': { params: void; response: void };
 
   // Group
   'group.query': { params: QueryParams<Group>; response: Group[] };

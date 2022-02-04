@@ -381,7 +381,9 @@ export class LanguageService {
       return of(true);
     }
 
-    const browserLang = this.translate.getBrowserLang();
+    // TODO BV !!! : Remove debugging code
+    // const browserLang = this.translate.getBrowserLang();
+    const browserLang = 'en';
     return this.setLanguage(browserLang);
   }
 

@@ -4,7 +4,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { UUID } from 'angular2-uuid';
 import { LocalStorage } from 'ngx-webstorage';
 import {
-  Observable, Observer, Subject, Subscriber,
+  Observable, Observer, of, Subject, Subscriber,
 } from 'rxjs';
 import { share } from 'rxjs/operators';
 import { ApiEventMessage } from 'app/enums/api-event-message.enum';
@@ -15,6 +15,7 @@ import { ApiEvent } from 'app/interfaces/api-event.interface';
 import { LoginParams } from 'app/interfaces/auth.interface';
 import { Job } from 'app/interfaces/job.interface';
 import { environment } from '../../environments/environment';
+import { Ipmi } from 'app/interfaces/ipmi.interface';
 
 @UntilDestroy()
 @Injectable()
@@ -200,16 +201,43 @@ export class WebSocketService {
       id: uuid, msg: ApiEventMessage.Method, method, params,
     };
 
-    // Create the observable
-    return new Observable((observer: Subscriber<ApiDirectory[K]['response']>) => {
-      this.pendingCalls.set(uuid, {
-        method,
-        args: params,
-        observer,
-      });
+    // TODO BV !!! Remove debugging code
+    if (method === 'ipmi.query') {
 
-      this.send(payload);
+      function fakeIpmi() {
+        return {
+          channel: Math.round(100 * Math.random()),
+          dhcp: true,
+          gateway: '192.168.1.1',
+          id: Math.round(100 * Math.random()),
+          ipaddress: '192.168.1.10',
+          netmask: '255.255.255.0',
+          vlan: {},
+          password: null,
+        } as Ipmi;
+      }
+
+      return of([
+        fakeIpmi(),
+        fakeIpmi(),
+        fakeIpmi(),
+        fakeIpmi(),
+        fakeIpmi(),
+      ])
+
+    } else {
+
+      return new Observable((observer: Subscriber<ApiDirectory[K]['response']>) => {
+        this.pendingCalls.set(uuid, {
+          method,
+          args: params,
+          observer,
+        });
+
+        this.send(payload);
     }).pipe(share());
+    }
+
   }
 
   /**
