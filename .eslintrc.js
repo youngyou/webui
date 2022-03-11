@@ -146,7 +146,28 @@ module.exports = {
         "default-case": "off",
         "import/no-cycle": "off",
         "no-async-promise-executor": "off",
-        "@typescript-eslint/member-ordering": "off",
+        "@typescript-eslint/member-ordering": [
+          "error",
+          {
+            "default": [
+              "signature",
+
+              "public-decorated-field",
+              "protected-decorated-field",
+              "private-decorated-field",
+
+              "public-field",
+              "protected-field",
+              "private-field",
+
+              "constructor",
+
+              "public-method",
+              "protected-method",
+              "private-method"
+            ]
+          }
+        ],
         "@typescript-eslint/no-unsafe-assignment": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-unsafe-return": "off",
