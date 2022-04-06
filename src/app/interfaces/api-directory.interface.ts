@@ -5,7 +5,7 @@ import { DeviceType } from 'app/enums/device-type.enum';
 import { EnclosureSlotStatus } from 'app/enums/enclosure-slot-status.enum';
 import { FailoverDisabledReason } from 'app/enums/failover-disabled-reason.enum';
 import { FailoverStatus } from 'app/enums/failover-status.enum';
-import { LACPDURate, XmitHashPolicy } from 'app/enums/network-interface.enum';
+import { LacpduRate, XmitHashPolicy } from 'app/enums/network-interface.enum';
 import { ProductType } from 'app/enums/product-type.enum';
 import { ServiceName } from 'app/enums/service-name.enum';
 import { TransportMode } from 'app/enums/transport-mode.enum';
@@ -144,7 +144,6 @@ import { LdapConfig, LdapConfigUpdate, LdapConfigUpdateResult } from 'app/interf
 import { LldpConfig, LldpConfigUpdate } from 'app/interfaces/lldp-config.interface';
 import { MailConfig, MailConfigUpdate, SendMailParams } from 'app/interfaces/mail-config.interface';
 import {
-  NetworkActivityChoice,
   NetworkConfiguration,
   NetworkConfigurationUpdate,
 } from 'app/interfaces/network-configuration.interface';
@@ -155,16 +154,17 @@ import { NfsShare, NfsShareUpdate } from 'app/interfaces/nfs-share.interface';
 import { CreateNtpServer, NtpServer } from 'app/interfaces/ntp-server.interface';
 import { OpenvpnClientConfig, OpenvpnClientConfigUpdate } from 'app/interfaces/openvpn-client-config.interface';
 import { OpenvpnServerConfig, OpenvpnServerConfigUpdate } from 'app/interfaces/openvpn-server-config.interface';
+import { MapOption } from 'app/interfaces/option.interface';
 import { PeriodicSnapshotTask, PeriodSnapshotTaskUpdate } from 'app/interfaces/periodic-snapshot-task.interface';
-import { PoolAttachment } from 'app/interfaces/pool-attachment.interface';
+import { DatasetAttachment, PoolAttachment } from 'app/interfaces/pool-attachment.interface';
 import { PoolExportParams } from 'app/interfaces/pool-export.interface';
 import { ImportDiskParams, PoolFindResult, PoolImportParams } from 'app/interfaces/pool-import.interface';
-import { PoolProcess } from 'app/interfaces/pool-process.interface';
 import { CreatePoolScrub, PoolScrub, PoolScrubParams } from 'app/interfaces/pool-scrub.interface';
 import { PoolUnlockQuery, PoolUnlockResult } from 'app/interfaces/pool-unlock-query.interface';
 import {
   CreatePool, Pool, PoolAttachParams, PoolExpandParams, PoolReplaceParams, UpdatePool,
 } from 'app/interfaces/pool.interface';
+import { Process } from 'app/interfaces/process.interface';
 import { QueryParams } from 'app/interfaces/query-api.interface';
 import { ReplicationConfigUpdate } from 'app/interfaces/replication-config-update.interface';
 import { ReplicationConfig } from 'app/interfaces/replication-config.interface';
@@ -208,7 +208,7 @@ import {
   FetchSupportParams,
   CreateNewTicket,
   NewTicketResponse,
-  SupportConfig, SupportConfigUpdate,
+  SupportConfig, SupportConfigUpdate, AttachTicketParams,
 } from 'app/interfaces/support.interface';
 import { SystemGeneralConfig, SystemGeneralConfigUpdate } from 'app/interfaces/system-config.interface';
 import { SystemDatasetConfig, SystemDatasetUpdate } from 'app/interfaces/system-dataset-config.interface';
@@ -235,7 +235,9 @@ import {
   VmDisplayWebUriParams, VmPortWizardResult,
   VmStopParams,
 } from 'app/interfaces/virtual-machine.interface';
-import { VmDevice, VmDeviceUpdate, VmDisplayDevice } from 'app/interfaces/vm-device.interface';
+import {
+  VmDevice, VmDeviceDelete, VmDeviceUpdate, VmDisplayDevice,
+} from 'app/interfaces/vm-device.interface';
 import {
   MatchDatastoresWithDatasets,
   MatchDatastoresWithDatasetsParams,
@@ -358,9 +360,10 @@ export type ApiDirectory = {
   'chart.release.pod_logs_choices': { params: [string]; response: Record<string, string[]> };
   'chart.release.query': { params: ChartReleaseQueryParams; response: ChartRelease[] };
   'chart.release.create': { params: [ChartReleaseCreate]; response: ChartRelease };
-  'chart.release.update': { params: any; response: any };
-  'chart.release.upgrade': { params: any; response: any };
-  'chart.release.delete': { params: [name: string]; response: boolean };
+  'chart.release.update': { params: any; response: ChartRelease };
+  'chart.release.upgrade': { params: any; response: ChartRelease };
+  'chart.release.delete': { params: [string, { delete_unused_images: boolean }]; response: boolean };
+  'chart.release.get_chart_releases_using_chart_release_images': { params: [name: string]; response: Choices };
   'chart.release.scale': { params: [name: string, params: { replica_count: number }]; response: ChartScaleResult };
   'chart.release.pod_console_choices': { params: [string]; response: Record<string, string[]> };
   'chart.release.nic_choices': { params: void; response: Choices };
@@ -531,7 +534,7 @@ export type ApiDirectory = {
   'interface.checkin_waiting': { params: void; response: number | null };
   'interface.checkin': { params: void; response: void };
   'interface.xmit_hash_policy_choices': { params: void; response: { [key: string]: keyof XmitHashPolicy } };
-  'interface.lacpdu_rate_choices': { params: void; response: { [key: string]: keyof LACPDURate } };
+  'interface.lacpdu_rate_choices': { params: void; response: { [key: string]: keyof LacpduRate } };
 
   // iSCSI
   'iscsi.initiator.query': { params: QueryParams<IscsiInitiatorGroup>; response: IscsiInitiatorGroup[] };
@@ -583,7 +586,7 @@ export type ApiDirectory = {
 
   // Network
   'network.general.summary': { params: void; response: NetworkSummary };
-  'network.configuration.activity_choices': { params: void; response: NetworkActivityChoice[] };
+  'network.configuration.activity_choices': { params: void; response: MapOption[] };
   'network.configuration.update': { params: [NetworkConfigurationUpdate]; response: NetworkConfiguration };
   'network.configuration.config': { params: void; response: NetworkConfiguration };
 
@@ -644,8 +647,8 @@ export type ApiDirectory = {
   'pool.attach': { params: [id: number, params: PoolAttachParams]; response: void };
   'pool.attachments': { params: [id: number]; response: PoolAttachment[] };
   'pool.create': { params: [CreatePool]; response: Pool };
-  'pool.dataset.attachments': { params: [datasetId: string]; response: PoolAttachment[] };
-  'pool.dataset.change_key': { params: [id: number, params: DatasetChangeKeyParams]; response: void };
+  'pool.dataset.attachments': { params: [datasetId: string]; response: DatasetAttachment[] };
+  'pool.dataset.change_key': { params: [id: string, params: DatasetChangeKeyParams]; response: void };
   'pool.dataset.compression_choices': { params: void; response: Choices };
   'pool.dataset.create': { params: any; response: Dataset };
   'pool.dataset.delete': { params: [path: string, params: { recursive: boolean; force?: boolean }]; response: boolean };
@@ -660,7 +663,7 @@ export type ApiDirectory = {
   'pool.dataset.lock': { params: DatasetLockParams; response: boolean };
   'pool.dataset.path_in_locked_datasets': { params: [path: string]; response: boolean };
   'pool.dataset.permission': { params: DatasetPermissionsUpdate; response: number };
-  'pool.dataset.processes': { params: [datasetId: string]; response: PoolProcess[] };
+  'pool.dataset.processes': { params: [datasetId: string]; response: Process[] };
   'pool.dataset.promote': { params: [id: string]; response: void };
   'pool.dataset.query': { params: QueryParams<Dataset, ExtraDatasetQueryOptions>; response: Dataset[] };
   'pool.dataset.query_encrypted_roots_keys': { params: void; response: DatasetEncryptedRootKeys };
@@ -670,7 +673,7 @@ export type ApiDirectory = {
   'pool.dataset.unlock_services_restart_choices': { params: [id: string]; response: Choices };
   'pool.dataset.update': { params: any; response: Dataset };
   'pool.detach': { params: [id: number, params: { label: string }]; response: boolean };
-  'pool.download_encryption_key': { params: any; response: string };
+  'pool.download_encryption_key': { params: [volumeId: number, fileName?: string]; response: string };
   'pool.expand': { params: PoolExpandParams; response: null };
   'pool.export': { params: PoolExportParams; response: void };
   'pool.filesystem_choices': { params: [DatasetType[]?]; response: string[] };
@@ -683,11 +686,10 @@ export type ApiDirectory = {
   'pool.is_upgraded': { params: [poolId: number]; response: boolean };
   'pool.offline': { params: [id: number, params: { label: string }]; response: boolean };
   'pool.online': { params: [id: number, params: { label: string }]; response: boolean };
-  'pool.passphrase': { params: any; response: any };
-  'pool.processes': { params: [id: number]; response: PoolProcess[] };
+  'pool.passphrase': { params: [number, { passphrase: string; admin_password: string }]; response: void };
+  'pool.processes': { params: [id: number]; response: Process[] };
   'pool.query': { params: QueryParams<Pool>; response: Pool[] };
-  'pool.recoverykey_rm': { params: any; response: any };
-  'pool.rekey': { params: any; response: any };
+  'pool.recoverykey_rm': { params: [number, { admin_password: string }]; response: void };
   'pool.remove': { params: PoolRemoveParams; response: void };
   'pool.replace': { params: [id: number, params: PoolReplaceParams]; response: boolean };
   'pool.resilver.config': { params: void; response: ResilverConfig };
@@ -708,7 +710,7 @@ export type ApiDirectory = {
 
   // Replication
   'replication.list_datasets': { params: [transport: TransportMode, credentials?: number]; response: string[] };
-  'replication.create': { params: any; response: any };
+  'replication.create': { params: any; response: ReplicationTask };
   'replication.query': { params: QueryParams<ReplicationTask>; response: ReplicationTask[] };
   'replication.restore': { params: [id: number, params: { name: string; target_dataset: string }]; response: void };
   'replication.run': { params: [id: number]; response: number };
@@ -719,7 +721,7 @@ export type ApiDirectory = {
     params: TargetUnmatchedSnapshotsParams;
     response: { [dataset: string]: string[] };
   };
-  'replication.update': { params: any; response: any };
+  'replication.update': { params: any; response: ReplicationTask };
 
   // Rsync
   'rsynctask.run': { params: [id: number]; response: any };
@@ -757,7 +759,7 @@ export type ApiDirectory = {
   'smb.update': { params: [SmbConfigUpdate]; response: SmbConfig };
   'smb.config': { params: void; response: SmbConfig };
   'smb.sharesec.query': { params: QueryParams<SmbSharesec>; response: SmbSharesec[] };
-  'smb.sharesec.update': { params: [id: number, update: { share_acl: SmbSharesecAce[] }]; response: any };
+  'smb.sharesec.update': { params: [id: number, update: { share_acl: SmbSharesecAce[] }]; response: SmbSharesec };
 
   // SSH
   'ssh.update': { params: [SshConfigUpdate]; response: SshConfig };
@@ -791,6 +793,7 @@ export type ApiDirectory = {
   'system.product_type': { params: void; response: ProductType };
   'system.advanced.syslog_certificate_choices': { params: void; response: Choices };
   'system.advanced.syslog_certificate_authority_choices': { params: void; response: Choices };
+  'system.advanced.sed_global_password': { params: void; response: string };
   'system.is_stable': { params: void; response: boolean };
 
   // Replication
@@ -803,6 +806,7 @@ export type ApiDirectory = {
   'support.config': { params: void; response: SupportConfig };
   'support.update': { params: [SupportConfigUpdate]; response: SupportConfig };
   'support.new_ticket': { params: [CreateNewTicket]; response: NewTicketResponse };
+  'support.attach_ticket': { params: AttachTicketParams; response: Job };
   'support.fetch_categories': { params: FetchSupportParams; response: Choices };
   'support.attach_ticket_max_size': { params: void; response: number };
 
@@ -825,7 +829,7 @@ export type ApiDirectory = {
   // Service
   'service.started': { params: [ServiceName]; response: boolean };
   'service.query': { params: QueryParams<Service>; response: Service[] };
-  'service.update': { params: [number, Partial<Service>]; response: number };
+  'service.update': { params: [number | ServiceName, Partial<Service>]; response: number };
   'service.start': { params: [ServiceName]; response: boolean };
   'service.stop': {
     params: [ServiceName];
@@ -883,7 +887,7 @@ export type ApiDirectory = {
   };
 
   // Vm
-  'vm.query': { params: QueryParams<VirtualMachine, { get: boolean }>; response: VirtualMachine[] };
+  'vm.query': { params: QueryParams<VirtualMachine>; response: VirtualMachine[] };
   'vm.cpu_model_choices': { params: void; response: Choices };
   'vm.bootloader_options': { params: void; response: Choices };
   'vm.device.nic_attach_choices': { params: void; response: Choices };
@@ -894,7 +898,7 @@ export type ApiDirectory = {
   'vm.get_display_web_uri': { params: VmDisplayWebUriParams; response: { [id: number]: VmDisplayWebUri } };
   'vm.device.passthrough_device_choices': { params: void; response: Choices };
   'vm.device.create': { params: [VmDeviceUpdate]; response: VmDevice };
-  'vm.device.delete': { params: [id: number]; response: boolean };
+  'vm.device.delete': { params: [number, VmDeviceDelete]; response: boolean };
   'vm.random_mac': { params: void; response: string };
   'vm.device.query': { params: QueryParams<VmDevice>; response: VmDevice[] };
   'vm.stop': { params: VmStopParams; response: void };
@@ -969,6 +973,7 @@ export type ApiDirectory = {
   // WEBDAV
   'webdav.config': { params: void; response: WebdavConfig };
   'webdav.update': { params: [WebdavConfigUpdate]; response: WebdavConfig };
+  'webdav.cert_choices': { params: void; response: Choices };
 
   // InitShutdownScript
   'initshutdownscript.query': { params: QueryParams<InitShutdownScript>; response: InitShutdownScript[] };

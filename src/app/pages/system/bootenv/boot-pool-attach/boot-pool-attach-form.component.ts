@@ -11,7 +11,7 @@ import filesize from 'filesize';
 import { map } from 'rxjs/operators';
 import { JobState } from 'app/enums/job-state.enum';
 import { helptextSystemBootenv } from 'app/helptext/system/boot-env';
-import { FormErrorHandlerService } from 'app/pages/common/ix-forms/services/form-error-handler.service';
+import { FormErrorHandlerService } from 'app/modules/ix-forms/services/form-error-handler.service';
 import { DialogService, WebSocketService } from 'app/services';
 
 @UntilDestroy()
@@ -34,15 +34,10 @@ export class BootPoolAttachFormComponent {
     tooltip: this.translate.instant(helptextSystemBootenv.dev_tooltip),
     options: this.ws.call('disk.get_unused').pipe(
       map((disks) => {
-        const options = disks.map((disk) => ({
+        return disks.map((disk) => ({
           label: `${disk.name} (${filesize(disk['size'], { standard: 'iec' })})`,
           value: disk.name,
         }));
-
-        return [
-          { label: '-', value: null },
-          ...options,
-        ];
       }),
     ),
   };

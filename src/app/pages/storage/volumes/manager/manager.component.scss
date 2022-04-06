@@ -44,6 +44,10 @@
   flex-direction: column;
 }
 
+.manager input[name='poolname']:focus-visible {
+  box-shadow: 0 0 0 1px var(--primary) inset;
+}
+
 .buttons {
   display: flex;
 }
@@ -111,7 +115,7 @@ h4 {
 }
 
 .fields {
-  margin: 0.75rem 3rem 3rem 1rem !important;
+  margin: 0.75rem 3rem 3rem 1rem;
   width: 600px;
 }
 

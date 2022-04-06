@@ -22,15 +22,15 @@ import { FormConfiguration } from 'app/interfaces/entity-form.interface';
 import { Option } from 'app/interfaces/option.interface';
 import { QueryParams } from 'app/interfaces/query-api.interface';
 import { ZfsProperty } from 'app/interfaces/zfs-property.interface';
-import { EntityFormComponent } from 'app/pages/common/entity/entity-form/entity-form.component';
-import { FieldConfig, FormSelectConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
-import { FieldSet } from 'app/pages/common/entity/entity-form/models/fieldset.interface';
-import { RelationAction } from 'app/pages/common/entity/entity-form/models/relation-action.enum';
-import { forbiddenValues } from 'app/pages/common/entity/entity-form/validators/forbidden-values-validation';
-import { EntityUtils } from 'app/pages/common/entity/utils';
+import { AppLoaderService } from 'app/modules/app-loader/app-loader.service';
+import { EntityFormComponent } from 'app/modules/entity/entity-form/entity-form.component';
+import { FieldConfig, FormSelectConfig } from 'app/modules/entity/entity-form/models/field-config.interface';
+import { FieldSet } from 'app/modules/entity/entity-form/models/fieldset.interface';
+import { RelationAction } from 'app/modules/entity/entity-form/models/relation-action.enum';
+import { forbiddenValues } from 'app/modules/entity/entity-form/validators/forbidden-values-validation';
+import { EntityUtils } from 'app/modules/entity/utils';
 import { DatasetFormData } from 'app/pages/storage/volumes/datasets/dataset-form/dataset-form-data.interface';
 import { StorageService, WebSocketService } from 'app/services';
-import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
 import { DialogService } from 'app/services/dialog.service';
 import { ModalService } from 'app/services/modal.service';
 
@@ -83,12 +83,12 @@ export class DatasetFormComponent implements FormConfiguration {
     'quota', 'refquota', 'reservation', 'refreservation', 'special_small_block_size',
   ];
   protected originalSize: { [field in SizeField]?: string } = {};
-  protected originalHumanSize: { [field in SizeField]?: any } = {};
+  protected originalHumanSize: { [field in SizeField]?: string | number } = {};
 
   protected warning = 80;
   protected critical = 95;
 
-  custActions = [
+  customActions = [
     {
       id: 'basic_mode',
       name: globalHelptext.basic_options,
@@ -183,7 +183,7 @@ export class DatasetFormComponent implements FormConfiguration {
           parent: this,
           validation: [
             (control: FormControl): ValidationErrors => {
-              const config = this.fieldConfig.find((c) => c.name === 'refquota');
+              const config = this.fieldConfig.find((config) => config.name === 'refquota');
 
               const size = this.convertHumanStringToNum(control.value, 'refquota');
               const errors = control.value && Number.isNaN(size)
@@ -194,7 +194,7 @@ export class DatasetFormComponent implements FormConfiguration {
                 config.hasErrors = true;
                 config.errors = globalHelptext.human_readable.input_error;
               } else {
-                const sizeError = control.value && (size != 0) && (size < this.minrefquota)
+                const sizeError = control.value && (size !== 0) && (size < this.minrefquota)
                   ? { invalid_size: true }
                   : null;
 
@@ -281,7 +281,7 @@ export class DatasetFormComponent implements FormConfiguration {
           parent: this,
           validation: [
             (control: FormControl): ValidationErrors => {
-              const config = this.fieldConfig.find((c) => c.name === 'refreservation');
+              const config = this.fieldConfig.find((config) => config.name === 'refreservation');
 
               const errors = control.value && Number.isNaN(this.convertHumanStringToNum(control.value, 'refreservation'))
                 ? { invalid_byte_string: true }
@@ -318,7 +318,7 @@ export class DatasetFormComponent implements FormConfiguration {
           parent: this,
           validation: [
             (control: FormControl): ValidationErrors => {
-              const config = this.fieldConfig.find((c) => c.name === 'quota');
+              const config = this.fieldConfig.find((config) => config.name === 'quota');
 
               const size = this.convertHumanStringToNum(control.value, 'quota');
               const errors = control.value && Number.isNaN(size)
@@ -329,7 +329,7 @@ export class DatasetFormComponent implements FormConfiguration {
                 config.hasErrors = true;
                 config.errors = globalHelptext.human_readable.input_error;
               } else {
-                const sizeError = control.value && (size != 0) && (size < this.minquota)
+                const sizeError = control.value && (size !== 0) && (size < this.minquota)
                   ? { invalid_size: true }
                   : null;
 
@@ -416,7 +416,7 @@ export class DatasetFormComponent implements FormConfiguration {
           parent: this,
           validation: [
             (control: FormControl): ValidationErrors => {
-              const config = this.fieldConfig.find((c) => c.name === 'reservation');
+              const config = this.fieldConfig.find((config) => config.name === 'reservation');
 
               const errors = control.value && Number.isNaN(this.convertHumanStringToNum(control.value, 'reservation'))
                 ? { invalid_byte_string: true }
@@ -540,7 +540,6 @@ export class DatasetFormComponent implements FormConfiguration {
         {
           type: 'select',
           name: 'deduplication',
-          label: helptext.dataset_form_deduplication_label,
           placeholder: helptext.dataset_form_deduplication_placeholder,
           tooltip: helptext.dataset_form_deduplication_tooltip,
           options: [
@@ -691,7 +690,7 @@ export class DatasetFormComponent implements FormConfiguration {
           parent: this,
           validation: [
             (control: FormControl): ValidationErrors => {
-              const config = this.fieldConfig.find((c) => c.name === 'special_small_block_size');
+              const config = this.fieldConfig.find((config) => config.name === 'special_small_block_size');
 
               const size = this.convertHumanStringToNum(control.value, 'special_small_block_size');
               const errors = control.value && Number.isNaN(size)
@@ -840,12 +839,14 @@ export class DatasetFormComponent implements FormConfiguration {
 
     // get optional unit
     unit = hstr.replace(num, '');
-    if ((unit) && !(unit = this.storageService.normalizeUnit(unit))) {
+    const normalizedUnit = this.storageService.normalizeUnit(unit);
+    if (unit && !normalizedUnit) {
       // error when unit is present but not recognized
       this.humanReadable[field] = '';
       return NaN;
     }
 
+    unit = normalizedUnit;
     const spacer = (unit) ? ' ' : '';
 
     this.humanReadable[field] = num.toString() + spacer + unit;
@@ -911,7 +912,7 @@ export class DatasetFormComponent implements FormConfiguration {
     }
   }
 
-  isCustActionVisible(actionId: string): boolean {
+  isCustomActionVisible(actionId: string): boolean {
     if (actionId === 'advanced_mode' && !this.isBasicMode) {
       return false;
     } if (actionId === 'basic_mode' && this.isBasicMode) {
@@ -1014,9 +1015,10 @@ export class DatasetFormComponent implements FormConfiguration {
     this.recordsizeControl.valueChanges.pipe(untilDestroyed(this)).subscribe((recordSize: string) => {
       const recordSizeNumber = parseInt(this.reverseRecordSizeMap[recordSize], 10);
       if (this.minimumRecommendedRecordsize && this.recommendedSize) {
-        this.recordsizeWarning = helptext.dataset_form_warning_1
-          + this.minimumRecommendedRecordsize
-          + helptext.dataset_form_warning_2;
+        this.recordsizeWarning = this.translate.instant(
+          helptext.dataset_form_warning,
+          { size: this.minimumRecommendedRecordsize },
+        );
         if (recordSizeNumber < this.recommendedSize) {
           this.recordsizeField.warnings = this.recordsizeWarning;
           this.isBasicMode = false;
@@ -1031,7 +1033,7 @@ export class DatasetFormComponent implements FormConfiguration {
   paramMap: {
     volid?: string;
     pk?: string;
-    parent?: any;
+    parent?: string;
   };
 
   preInit(entityForm: EntityFormComponent): void {
@@ -1391,7 +1393,7 @@ export class DatasetFormComponent implements FormConfiguration {
       ? this.getFieldValueOrNone(wsResponse.refquota_critical)
       : this.critical;
     const refquotaCriticalInherit = this.isInherited(wsResponse.refquota_critical, refquotaCritical);
-    const sizeValues: { [field in SizeField]?: any } = {};
+    const sizeValues: { [field in SizeField]?: string | number } = {};
     this.sizeFields.forEach((field) => {
       if (wsResponse[field] && wsResponse[field].rawvalue) {
         this.originalSize[field] = wsResponse[field].rawvalue;
@@ -1422,16 +1424,16 @@ export class DatasetFormComponent implements FormConfiguration {
       refquota_warning_inherit: refquotaWarningInherit,
       refquota_critical: refquotaCritical,
       refquota_critical_inherit: refquotaCriticalInherit,
-      quota: this.originalHumanSize['quota'],
+      quota: this.originalHumanSize['quota'] as number,
       readonly: this.getFieldValueOrRaw(wsResponse.readonly),
       exec: this.getFieldValueOrRaw(wsResponse.exec),
       recordsize: this.getFieldValueOrRaw(wsResponse.recordsize),
-      refquota: this.originalHumanSize['refquota'],
-      refreservation: this.originalHumanSize['refreservation'],
-      reservation: this.originalHumanSize['reservation'],
+      refquota: this.originalHumanSize['refquota'] as number,
+      refreservation: this.originalHumanSize['refreservation'] as number,
+      reservation: this.originalHumanSize['reservation'] as number,
       snapdir: this.getFieldValueOrRaw(wsResponse.snapdir),
       sync: this.getFieldValueOrRaw(wsResponse.sync),
-      special_small_block_size: this.originalHumanSize['special_small_block_size'],
+      special_small_block_size: this.originalHumanSize['special_small_block_size'] as number,
     };
 
     if (

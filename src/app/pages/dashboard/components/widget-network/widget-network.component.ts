@@ -1,5 +1,5 @@
 import {
-  Component, AfterViewInit, OnDestroy, Input,
+  Component, AfterViewInit, OnDestroy, Input, OnInit,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -14,18 +14,20 @@ import { BaseNetworkInterface, NetworkInterfaceAlias } from 'app/interfaces/netw
 import { ReportingParams } from 'app/interfaces/reporting.interface';
 import { Interval } from 'app/interfaces/timeout.interface';
 import { WebsocketError } from 'app/interfaces/websocket-error.interface';
-import { EmptyConfig, EmptyType } from 'app/pages/common/entity/entity-empty/entity-empty.component';
-import { TableService } from 'app/pages/common/entity/table/table.service';
+import { EmptyConfig, EmptyType } from 'app/modules/entity/entity-empty/entity-empty.component';
+import { TableService } from 'app/modules/entity/table/table.service';
 import { WidgetComponent } from 'app/pages/dashboard/components/widget/widget.component';
 import { WidgetUtils } from 'app/pages/dashboard/utils/widget-utils';
 import { ReportingDatabaseError, ReportsService } from 'app/pages/reports-dashboard/reports.service';
 import { StorageService, WebSocketService } from 'app/services';
+import { CoreService } from 'app/services/core-service/core.service';
 import { DialogService } from 'app/services/dialog.service';
 import { LocaleService } from 'app/services/locale.service';
+import { ThemeService } from 'app/services/theme/theme.service';
 
 interface NicInfo {
   ip: string;
-  state: string;
+  state: LinkState;
   in: string;
   out: string;
   lastSent: number;
@@ -44,7 +46,7 @@ interface NicInfoMap {
   templateUrl: './widget-network.component.html',
   styleUrls: ['./widget-network.component.scss'],
 })
-export class WidgetNetworkComponent extends WidgetComponent implements AfterViewInit, OnDestroy {
+export class WidgetNetworkComponent extends WidgetComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() stats: Subject<CoreEvent>;
   @Input() nics: BaseNetworkInterface[];
 
@@ -111,7 +113,7 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
           ticks: {
             maxTicksLimit: 8,
             callback: (value) => {
-              if (value == 0) {
+              if (value === 0) {
                 return 0;
               }
 
@@ -129,7 +131,7 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
           if (label) {
             label += ': ';
           }
-          if (tooltipItem.yLabel == 0) {
+          if (tooltipItem.yLabel === 0) {
             label += 0;
           } else {
             const converted = this.utils.convert(Number(tooltipItem.yLabel));
@@ -156,6 +158,8 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
     private dialog: DialogService,
     private storage: StorageService,
     private localeService: LocaleService,
+    public themeService: ThemeService,
+    public core: CoreService,
   ) {
     super(translate);
     this.configurable = false;
@@ -171,7 +175,7 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
     }
   }
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
     this.availableNics = this.nics.filter((nic) => nic.state.link_state === LinkState.Up);
 
     this.updateGridInfo();
@@ -181,7 +185,9 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
     if (this.interval) {
       clearInterval(this.interval);
     }
+  }
 
+  ngAfterViewInit(): void {
     this.interval = setInterval(() => {
       this.fetchReportData();
     }, 10000);
@@ -194,15 +200,22 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
           const received = this.utils.convert(evt.data.received_bytes_rate);
 
           const nicInfo = this.nicInfoMap[nicName];
+          nicInfo.state = evt.data.link_state as LinkState;
           nicInfo.in = `${received.value} ${received.units}/s`;
           nicInfo.out = `${sent.value} ${sent.units}/s`;
 
-          if (evt.data.sent_bytes - nicInfo.lastSent > this.minSizeToActiveTrafficArrowIcon) {
+          if (
+            evt.data.sent_bytes !== undefined
+            && evt.data.sent_bytes - nicInfo.lastSent > this.minSizeToActiveTrafficArrowIcon
+          ) {
             nicInfo.lastSent = evt.data.sent_bytes;
             this.tableService.updateStateInfoIcon(nicName, 'sent');
           }
 
-          if (evt.data.received_bytes - nicInfo.lastReceived > this.minSizeToActiveTrafficArrowIcon) {
+          if (
+            evt.data.received_bytes !== undefined
+            && evt.data.received_bytes - nicInfo.lastReceived > this.minSizeToActiveTrafficArrowIcon
+          ) {
             nicInfo.lastReceived = evt.data.received_bytes;
             this.tableService.updateStateInfoIcon(nicName, 'received');
           }
@@ -215,9 +228,9 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
     let colSpan = 6;
     if (this.availableNics.length <= 3) {
       colSpan = 6;
-    } else if (this.availableNics.length == 4) {
+    } else if (this.availableNics.length === 4) {
       colSpan = 3;
-    } else if (this.availableNics.length == 5) {
+    } else if (this.availableNics.length === 5) {
       if (index < 2) {
         colSpan = 3;
       } else {
@@ -252,7 +265,7 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
 
     if (nicsCount <= 3) {
       this.rows = nicsCount;
-      if (nicsCount == 3) {
+      if (nicsCount === 3) {
         this.gap = 4;
         this.aspectRatio = 304 / 100;
         maxTicksLimit = 3;
@@ -260,7 +273,7 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
         this.gap = 8;
         this.aspectRatio = 474 / 188;
 
-        if (nicsCount == 2) {
+        if (nicsCount === 2) {
           this.gap = 16;
           this.aspectRatio = 304 / 148;
           maxTicksLimit = 3;
@@ -269,7 +282,7 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
     } else {
       this.rows = 2;
       this.gap = 8;
-      if (nicsCount == 4) {
+      if (nicsCount === 4) {
         this.gap = 16;
       }
       if (nicsCount >= 5) {
@@ -310,9 +323,22 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
     return ip;
   }
 
-  getLinkState(nic: BaseNetworkInterface): string {
-    if (!nic.state.aliases) { return ''; }
-    return nic.state.link_state.replace(/_/g, ' ');
+  getLinkState(nic: BaseNetworkInterface): LinkState {
+    if (!nic.state.aliases) {
+      return null;
+    }
+    if (!this.nicInfoMap[nic.name]) {
+      return nic.state.link_state;
+    }
+    return this.nicInfoMap[nic.name].state;
+  }
+
+  getLinkStateLabel(nic: BaseNetworkInterface): string {
+    const linkState = this.getLinkState(nic);
+    if (!linkState) {
+      return '';
+    }
+    return linkState.replace(/_/g, ' ');
   }
 
   async fetchReportData(): Promise<void> {
@@ -418,8 +444,8 @@ export class WidgetNetworkComponent extends WidgetComponent implements AfterView
   }
 
   showInOutInfo(nic: BaseNetworkInterface): string {
-    const lastSent = this.storage.convertBytestoHumanReadable(this.nicInfoMap[nic.state.name].lastSent);
-    const lastReceived = this.storage.convertBytestoHumanReadable(this.nicInfoMap[nic.state.name].lastReceived);
+    const lastSent = this.storage.convertBytesToHumanReadable(this.nicInfoMap[nic.state.name].lastSent);
+    const lastReceived = this.storage.convertBytesToHumanReadable(this.nicInfoMap[nic.state.name].lastReceived);
 
     return `${this.translate.instant('Sent')}: ${lastSent} ${this.translate.instant('Received')}: ${lastReceived}`;
   }

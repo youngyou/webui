@@ -9,12 +9,12 @@ import { JobState } from 'app/enums/job-state.enum';
 import { ProductType } from 'app/enums/product-type.enum';
 import { SystemUpdateStatus } from 'app/enums/system-update.enum';
 import { HaStatusEvent } from 'app/interfaces/events/ha-status-event.interface';
-import { UpdateCheckedEvent } from 'app/interfaces/events/update-checked-event.interface';
-import { UserPreferencesChangedEvent } from 'app/interfaces/events/user-preferences-event.interface';
 import { SystemInfo } from 'app/interfaces/system-info.interface';
 import { WidgetComponent } from 'app/pages/dashboard/components/widget/widget.component';
 import { SystemGeneralService, WebSocketService } from 'app/services';
+import { CoreService } from 'app/services/core-service/core.service';
 import { LocaleService } from 'app/services/locale.service';
+import { ThemeService } from 'app/services/theme/theme.service';
 
 @UntilDestroy()
 @Component({
@@ -34,15 +34,12 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
   memory: string;
   imagePath = 'assets/images/';
   ready = false;
-  retroLogo = -1;
   product_image = '';
   product_model = '';
   product_enclosure = ''; // rackmount || tower
   certified = false;
-  failoverBtnLabel = 'FAILOVER TO STANDBY';
   updateAvailable = false;
   private _updateBtnStatus = 'default';
-  updateBtnLabel: string = this.translate.instant('Check for Updates');
   private _themeAccentColors: string[];
   manufacturer = '';
   buildDate: string;
@@ -59,9 +56,16 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
 
   readonly ProductType = ProductType;
 
-  constructor(public router: Router, public translate: TranslateService, private ws: WebSocketService,
-    public sysGenService: SystemGeneralService, public mediaObserver: MediaObserver,
-    private locale: LocaleService) {
+  constructor(
+    public router: Router,
+    public translate: TranslateService,
+    private ws: WebSocketService,
+    public sysGenService: SystemGeneralService,
+    public mediaObserver: MediaObserver,
+    private locale: LocaleService,
+    private core: CoreService,
+    public themeService: ThemeService,
+  ) {
     super(translate);
     this.configurable = false;
     this.sysGenService.updateRunning.pipe(untilDestroyed(this)).subscribe((res: string) => {
@@ -69,32 +73,15 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
     });
 
     mediaObserver.media$.pipe(untilDestroyed(this)).subscribe((evt) => {
-      const st = evt.mqAlias == 'xs' ? 'Mobile' : 'Desktop';
+      const st = evt.mqAlias === 'xs' ? 'Mobile' : 'Desktop';
       this.screenType = st;
     });
   }
 
   ngAfterViewInit(): void {
-    this.core.register({ observerClass: this, eventName: 'UserPreferencesChanged' }).pipe(untilDestroyed(this)).subscribe((evt: UserPreferencesChangedEvent) => {
-      this.retroLogo = evt.data.retroLogo ? 1 : 0;
-    });
-
-    this.ws.call('update.get_auto_download').pipe(untilDestroyed(this)).subscribe((isAutoDownloadOn) => {
-      if (!isAutoDownloadOn) {
-        return;
-      }
-
-      this.core.register({ observerClass: this, eventName: 'UpdateChecked' }).pipe(untilDestroyed(this)).subscribe((evt: UpdateCheckedEvent) => {
-        if (evt.data.status == SystemUpdateStatus.Available) {
-          this.updateAvailable = true;
-          sessionStorage.updateAvailable = 'true';
-        }
-      });
-    });
-
     if (this.isHA && this.isPassive) {
       this.core.register({ observerClass: this, eventName: 'HA_Status' }).pipe(untilDestroyed(this)).subscribe((evt: HaStatusEvent) => {
-        if (evt.data.status == 'HA Enabled' && !this.data) {
+        if (evt.data.status === 'HA Enabled' && !this.data) {
           this.ws.call('failover.call_remote', ['system.info']).pipe(untilDestroyed(this)).subscribe((systemInfo: SystemInfo) => {
             this.processSysInfo(systemInfo);
           });
@@ -105,24 +92,8 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
       this.ws.call('system.info').pipe(untilDestroyed(this)).subscribe((systemInfo) => {
         this.processSysInfo(systemInfo);
       });
+      this.checkForUpdate();
 
-      /**
-       * limit the check to once a day
-       */
-      if (
-        sessionStorage.updateLastChecked
-        && Number(sessionStorage.updateLastChecked) + 24 * 60 * 60 * 1000 > Date.now()
-      ) {
-        if (sessionStorage.updateAvailable == 'true') {
-          this.updateAvailable = true;
-        }
-      } else {
-        sessionStorage.updateLastChecked = Date.now();
-        sessionStorage.updateAvailable = 'false';
-        this.core.emit({ name: 'UpdateCheck' });
-      }
-
-      this.core.emit({ name: 'UserPreferencesRequest' });
       this.core.emit({ name: 'HAStatusRequest' });
     }
     if (window.localStorage.getItem('product_type').includes(ProductType.Enterprise)) {
@@ -162,9 +133,15 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
   get updateBtnStatus(): string {
     if (this.updateAvailable) {
       this._updateBtnStatus = 'default';
-      this.updateBtnLabel = this.translate.instant('Updates Available');
     }
     return this._updateBtnStatus;
+  }
+
+  get updateBtnLabel(): string {
+    if (this.updateAvailable) {
+      return this.translate.instant('Updates Available');
+    }
+    return this.translate.instant('Check for Updates');
   }
 
   processSysInfo(systemInfo: SystemInfo): void {
@@ -183,7 +160,7 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
     this.memory = this.formatMemory(this.data.physmem, 'GiB');
 
     // PLATFORM INFO
-    if (this.data.system_manufacturer && this.data.system_manufacturer.toLowerCase() == 'ixsystems') {
+    if (this.data.system_manufacturer && this.data.system_manufacturer.toLowerCase() === 'ixsystems') {
       this.manufacturer = 'ixsystems';
     } else {
       this.manufacturer = 'other';
@@ -228,9 +205,9 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
 
   formatMemory(physmem: number, units: string): string {
     let result: string;
-    if (units == 'MiB') {
+    if (units === 'MiB') {
       result = Number(physmem / 1024 / 1024).toFixed(0) + ' MiB';
-    } else if (units == 'GiB') {
+    } else if (units === 'GiB') {
       result = Number(physmem / 1024 / 1024 / 1024).toFixed(0) + ' GiB';
     }
     return result;
@@ -331,5 +308,32 @@ export class WidgetSysInfoComponent extends WidgetComponent implements OnDestroy
 
   goToEnclosure(): void {
     if (this.enclosureSupport) this.router.navigate(['/system/viewenclosure']);
+  }
+
+  /**
+   * limit the check to once a day
+   */
+  private checkForUpdate(): void {
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (
+      sessionStorage.updateLastChecked
+      && Number(sessionStorage.updateLastChecked) + oneDay > Date.now()
+    ) {
+      this.updateAvailable = sessionStorage.updateAvailable === 'true';
+      return;
+    }
+    sessionStorage.updateLastChecked = Date.now();
+    sessionStorage.updateAvailable = 'false';
+
+    this.ws.call('update.check_available').pipe(untilDestroyed(this)).subscribe((update) => {
+      if (update.status !== SystemUpdateStatus.Available) {
+        this.updateAvailable = false;
+        sessionStorage.updateAvailable = 'false';
+        return;
+      }
+
+      this.updateAvailable = true;
+      sessionStorage.updateAvailable = 'true';
+    });
   }
 }

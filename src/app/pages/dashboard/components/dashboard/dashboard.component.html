@@ -9,7 +9,7 @@
     [style.width]="optimalDesktopWidth"
     fxLayout="row wrap"
     fxLayoutGap="grid 4px"
-    ixDropGrid 
+    ixDropGrid
     [ixDropGridModel]="renderedWidgets"
     (ixDropGridModelChange)="onWidgetReorder($event)"
   >
@@ -43,11 +43,11 @@
               [showReorderHandle]="reorderMode"
             ><span ixDragHandle></span></widget-sysinfo>
 
-            <widget-help 
+            <widget-help
               *ngSwitchCase="'help'"
               ixDrag
               [showReorderHandle]="reorderMode"
-            ></widget-help>
+            ><span ixDragHandle></span></widget-help>
 
             <widget-cpu *ngSwitchCase="'cpu'"
               fxFlex="{{widgetWidth}}px"

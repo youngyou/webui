@@ -2,15 +2,16 @@ import {
   AfterViewInit, Component, OnInit, QueryList, ViewChild, ViewChildren,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { SortDirection } from '@angular/material/sort';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Store } from '@ngrx/store';
 import { TranslateService } from '@ngx-translate/core';
 import { DatatableComponent } from '@swimlane/ngx-datatable';
 import * as filesize from 'filesize';
 import * as _ from 'lodash';
 import { of } from 'rxjs';
 import { filter, switchMap, take } from 'rxjs/operators';
-import { DownloadKeyDialogComponent } from 'app/components/common/dialog/download-key/download-key-dialog.component';
 import { DiskBus } from 'app/enums/disk-bus.enum';
 import { DiskType } from 'app/enums/disk-type.enum';
 import helptext from 'app/helptext/storage/volumes/manager/manager';
@@ -18,15 +19,18 @@ import { Job } from 'app/interfaces/job.interface';
 import { Option } from 'app/interfaces/option.interface';
 import { CreatePool, Pool, UpdatePool } from 'app/interfaces/pool.interface';
 import { VDev } from 'app/interfaces/storage.interface';
-import { DialogFormConfiguration } from 'app/pages/common/entity/entity-dialog/dialog-form-configuration.interface';
-import { EntityDialogComponent } from 'app/pages/common/entity/entity-dialog/entity-dialog.component';
-import { FormParagraphConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
-import { EntityJobComponent } from 'app/pages/common/entity/entity-job/entity-job.component';
-import { EntityUtils } from 'app/pages/common/entity/utils';
+import { AppLoaderService } from 'app/modules/app-loader/app-loader.service';
+import { DownloadKeyDialogComponent } from 'app/modules/common/dialog/download-key/download-key-dialog.component';
+import { DialogFormConfiguration } from 'app/modules/entity/entity-dialog/dialog-form-configuration.interface';
+import { EntityDialogComponent } from 'app/modules/entity/entity-dialog/entity-dialog.component';
+import { FormParagraphConfig } from 'app/modules/entity/entity-form/models/field-config.interface';
+import { EntityJobComponent } from 'app/modules/entity/entity-job/entity-job.component';
+import { EntityUtils } from 'app/modules/entity/utils';
 import { ManagerDisk } from 'app/pages/storage/volumes/manager/manager-disk.interface';
-import { DialogService, WebSocketService, SystemGeneralService } from 'app/services';
-import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
+import { DialogService, WebSocketService } from 'app/services';
 import { StorageService } from 'app/services/storage.service';
+import { AppState } from 'app/store';
+import { waitForAdvancedConfig } from 'app/store/system-config/system-config.selectors';
 import { VdevComponent } from './vdev/vdev.component';
 
 @UntilDestroy()
@@ -158,7 +162,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
     public mdDialog: MatDialog,
     public translate: TranslateService,
     public sorter: StorageService,
-    private sysGeneralService: SystemGeneralService,
+    private store$: Store<AppState>,
   ) {}
 
   duplicate(): void {
@@ -169,7 +173,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
     }
     const vdevsOptions = [];
     for (let i = maxVdevs; i > 0; i--) {
-      vdevsOptions.push({ label: i, value: i });
+      vdevsOptions.push({ label: String(i), value: i });
     }
     const conf: DialogFormConfiguration = {
       title: helptext.manager_duplicate_title,
@@ -205,11 +209,11 @@ export class ManagerComponent implements OnInit, AfterViewInit {
         }
         for (let i = 0; i < value.vdevs; i++) {
           const vdevValues = { disks: [] as ManagerDisk[], type: this.firstDataVdevType };
-          for (let j = 0; j < this.firstDataVdevDisknum; j++) {
-            const disk = duplicableDisks.shift();
-            vdevValues.disks.push(disk);
+          for (let n = 0; n < this.firstDataVdevDisknum; n++) {
+            const duplicateDisk = duplicableDisks.shift();
+            vdevValues.disks.push(duplicateDisk);
             // remove disk from selected
-            this.selected = _.remove(this.selected, (d) => d.devname !== disk.devname);
+            this.selected = _.remove(this.selected, (disk) => disk.devname !== duplicateDisk.devname);
           }
           this.addVdev('data', vdevValues);
         }
@@ -219,7 +223,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
         }, 500);
       },
       afterInit: (entityDialog: EntityDialogComponent) => {
-        const copyDesc: FormParagraphConfig = _.find(entityDialog.fieldConfig, { name: 'copy_desc' });
+        const copyDesc = _.find(entityDialog.fieldConfig, { name: 'copy_desc' }) as FormParagraphConfig;
         const setParatext = (vdevs: number): void => {
           const used = this.firstDataVdevDisknum * vdevs;
           const remaining = this.duplicableDisks.length - used;
@@ -306,8 +310,8 @@ export class ManagerComponent implements OnInit, AfterViewInit {
         }
       }
     });
-    this.sysGeneralService.getAdvancedConfig$.pipe(untilDestroyed(this)).subscribe((res) => {
-      this.swapondrive = res.swapondrive;
+    this.store$.pipe(waitForAdvancedConfig, untilDestroyed(this)).subscribe((config) => {
+      this.swapondrive = config.swapondrive;
     });
     this.route.params.pipe(untilDestroyed(this)).subscribe((params) => {
       if (params['pk']) {
@@ -641,13 +645,13 @@ export class ManagerComponent implements OnInit, AfterViewInit {
         }
         dialogRef.componentInstance.success
           .pipe(
-            switchMap((r: Job<Pool>) => {
+            switchMap((job: Job<Pool>) => {
               if (this.isEncrypted) {
                 const downloadDialogRef = this.mdDialog.open(DownloadKeyDialogComponent, { disableClose: true });
                 downloadDialogRef.componentInstance.new = true;
-                downloadDialogRef.componentInstance.volumeId = r.result.id;
-                downloadDialogRef.componentInstance.volumeName = r.result.name;
-                downloadDialogRef.componentInstance.fileName = 'dataset_' + r.result.name + '_keys.json';
+                downloadDialogRef.componentInstance.volumeId = job.result.id;
+                downloadDialogRef.componentInstance.volumeName = job.result.name;
+                downloadDialogRef.componentInstance.fileName = 'dataset_' + job.result.name + '_keys.json';
 
                 return downloadDialogRef.afterClosed();
               }
@@ -658,7 +662,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
           )
           .pipe(untilDestroyed(this)).subscribe(
             () => {},
-            (e) => new EntityUtils().handleWsError(this, e, this.dialog),
+            (error) => new EntityUtils().handleWsError(this, error, this.dialog),
             () => {
               dialogRef.close(false);
               this.goBack();
@@ -727,7 +731,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
     let re;
     try {
       re = new RegExp(val);
-    } catch (e: unknown) {
+    } catch (error: unknown) {
       this.regExpHasErrors = true;
     }
 
@@ -742,8 +746,9 @@ export class ManagerComponent implements OnInit, AfterViewInit {
       this.regExpHasErrors = false;
 
       // update the rows
-      this.disks = this.temp.filter((d) => {
-        return this.nameFilter.test(d.devname.toLowerCase()) && this.capacityFilter.test(d.capacity.toLowerCase());
+      this.disks = this.temp.filter((disk) => {
+        return this.nameFilter.test(disk.devname.toLowerCase())
+          && this.capacityFilter.test(disk.capacity.toLowerCase());
       });
 
       // Whenever the filter changes, always go back to the first page
@@ -800,7 +805,7 @@ export class ManagerComponent implements OnInit, AfterViewInit {
     }
   }
 
-  reorderEvent(event: any): void {
+  reorderEvent(event: { sorts: { prop: keyof ManagerDisk; dir: SortDirection }[] }): void {
     const sort = event.sorts[0];
     const rows = this.disks;
     this.sorter.tableSorter(rows, sort.prop, sort.dir);

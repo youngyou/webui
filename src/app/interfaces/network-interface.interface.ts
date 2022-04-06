@@ -23,9 +23,6 @@ export interface BaseNetworkInterface {
   options: string;
   state: NetworkInterfaceState;
   type: NetworkInterfaceType;
-
-  // TODO: Unclear if this is type specific or an 'extra' field in response.
-  disable_offload_capabilities?: boolean;
 }
 
 export interface PhysicalNetworkInterface extends BaseNetworkInterface {
@@ -35,6 +32,7 @@ export interface PhysicalNetworkInterface extends BaseNetworkInterface {
 export interface BridgeNetworkInterface extends BaseNetworkInterface {
   type: NetworkInterfaceType.Bridge;
   bridge_members?: string[];
+  stp?: boolean;
 }
 
 export interface VlanNetworkInterface extends BaseNetworkInterface {

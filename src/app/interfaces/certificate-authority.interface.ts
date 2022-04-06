@@ -1,4 +1,4 @@
-import { CACreateType } from '../enums/ca-create-type.enum';
+import { CaCreateType } from '../enums/ca-create-type.enum';
 import { CertificateDigestAlgorithm } from '../enums/ca-digest-algorithm.enum';
 import { CertificateKeyType } from '../enums/ca-key-type.enum';
 import { EcCurve } from '../enums/ec-curve.enum';
@@ -45,6 +45,7 @@ export interface CertificateExtensions {
 }
 
 export interface CertificateAuthorityUpdate {
+  add_to_trusted_store: boolean;
   tos: boolean;
   csr_id: number;
   signedby: number;
@@ -68,7 +69,7 @@ export interface CertificateAuthorityUpdate {
   passphrase: string;
   privatekey: string;
   state: string;
-  create_type: CACreateType;
+  create_type: CaCreateType;
   digest_algorithm: CertificateDigestAlgorithm;
   san: string[];
   cert_extensions: CertificateExtensions;
@@ -81,6 +82,7 @@ export interface CertificateAuthority {
   CA_type_internal: boolean;
   CSR: unknown;
   DN: string;
+  add_to_trusted_store: boolean;
   cert_type: string; // Enum?
   cert_type_CSR: boolean;
   cert_type_existing: boolean;

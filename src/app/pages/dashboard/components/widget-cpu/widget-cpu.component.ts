@@ -1,5 +1,5 @@
 import {
-  Component, AfterViewInit, Input, ViewChild, OnDestroy, ElementRef,
+  Component, AfterViewInit, Input, OnDestroy, ElementRef,
 } from '@angular/core';
 import { MediaObserver } from '@angular/flex-layout';
 import { NgForm } from '@angular/forms';
@@ -14,15 +14,16 @@ import * as d3 from 'd3';
 import { Subject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ThemeUtils } from 'app/core/classes/theme-utils/theme-utils';
-import { ViewChartBarComponent } from 'app/core/components/view-chart-bar/view-chart-bar.component';
-import { GaugeConfig, ViewChartGaugeComponent } from 'app/core/components/view-chart-gauge/view-chart-gauge.component';
 import { CoreEvent } from 'app/interfaces/events';
 import { CpuStatsEvent } from 'app/interfaces/events/cpu-stats-event.interface';
 import { SysInfoEvent } from 'app/interfaces/events/sys-info-event.interface';
 import { AllCpusUpdate } from 'app/interfaces/reporting.interface';
+import { Theme } from 'app/interfaces/theme.interface';
+import { GaugeConfig } from 'app/modules/charts/components/view-chart-gauge/view-chart-gauge.component';
 import { WidgetComponent } from 'app/pages/dashboard/components/widget/widget.component';
 import { WidgetCpuData } from 'app/pages/dashboard/interfaces/widget-data.interface';
-import { Theme } from 'app/services/theme/theme.service';
+import { CoreService } from 'app/services/core-service/core.service';
+import { ThemeService } from 'app/services/theme/theme.service';
 
 @UntilDestroy()
 @Component({
@@ -31,8 +32,6 @@ import { Theme } from 'app/services/theme/theme.service';
   styleUrls: ['./widget-cpu.component.scss'],
 })
 export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('load', { static: true }) cpuLoad: ViewChartGaugeComponent;
-  @ViewChild('cores', { static: true }) cpuCores: ViewChartBarComponent;
   @Input() data: Subject<CoreEvent>;
   @Input() cpuModel: string;
   chart: any;// Chart.js instance with per core data
@@ -78,6 +77,8 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
     public translate: TranslateService,
     public mediaObserver: MediaObserver,
     private el: ElementRef<HTMLElement>,
+    public themeService: ThemeService,
+    public core: CoreService,
   ) {
     super(translate);
 
@@ -85,11 +86,11 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
 
     mediaObserver.media$.pipe(untilDestroyed(this)).subscribe((evt) => {
       const size = {
-        width: evt.mqAlias == 'xs' ? 320 : 536,
+        width: evt.mqAlias === 'xs' ? 320 : 536,
         height: 140,
       };
 
-      const st = evt.mqAlias == 'xs' ? 'Mobile' : 'Desktop';
+      const st = evt.mqAlias === 'xs' ? 'Mobile' : 'Desktop';
       if (this.chart && this.screenType !== st) {
         this.chart.resize(size);
       }
@@ -118,40 +119,40 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
   }
 
   ngAfterViewInit(): void {
-    this.core.register({ observerClass: this, eventName: 'ThemeChanged' })
+    this.core.register({ observerClass: this })
       .pipe(
         switchMap(() => this.data),
         untilDestroyed(this),
       ).subscribe((evt: CoreEvent) => {
-        d3.select('#grad1 .begin')
-          .style('stop-color', this.getHighlightColor(0));
+        if (evt.name === 'CpuStats') {
+          const cpuData = (evt as CpuStatsEvent).data;
+          if (!cpuData.average) {
+            return;
+          }
 
-        d3.select('#grad1 .end')
-          .style('stop-color', this.getHighlightColor(0.15));
-
-        if (evt.name !== 'CpuStats') {
-          return;
+          this.setCpuLoadData(['Load', parseInt(cpuData.average.usage.toFixed(1))]);
+          this.setCpuData(cpuData);
         }
 
-        const cpuData = (evt as CpuStatsEvent).data;
-        if (!cpuData.average) {
-          return;
-        }
+        if (evt.name === 'ThemeChanged') {
+          d3.select('#grad1 .begin')
+            .style('stop-color', this.getHighlightColor(0));
 
-        this.setCpuLoadData(['Load', parseInt(cpuData.average.usage.toFixed(1))]);
-        this.setCpuData(cpuData);
+          d3.select('#grad1 .end')
+            .style('stop-color', this.getHighlightColor(0.15));
+        }
       });
   }
 
   parseCpuData(cpuData: AllCpusUpdate): (string | number)[][] {
     this.tempAvailable = Boolean(cpuData.temperature && Object.keys(cpuData.temperature).length > 0);
     const usageColumn: (string | number)[] = ['Usage'];
-    let temperatureColumn: string[] = ['Temperature'];
+    let temperatureColumn: (string | number)[] = ['Temperature'];
     const temperatureValues = [];
 
     // Filter out stats per thread
     const keys = Object.keys(cpuData);
-    const threads = keys.filter((n) => !Number.isNaN(parseFloat(n)));
+    const threads = keys.filter((cpuUpdateAttribute) => !Number.isNaN(parseFloat(cpuUpdateAttribute)));
 
     for (let i = 0; i < this.threadCount; i++) {
       usageColumn.push(parseInt(cpuData[i].usage.toFixed(1)));
@@ -179,13 +180,13 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
     this.usageMax = Number(Math.max(...usage).toFixed(0));
     this.usageMinThreads = [];
     this.usageMaxThreads = [];
-    for (let u = 0; u < usage.length; u++) {
-      if (usage[u] == this.usageMin) {
-        this.usageMinThreads.push(Number(u.toFixed(0)));
+    for (let i = 0; i < usage.length; i++) {
+      if (usage[i] === this.usageMin) {
+        this.usageMinThreads.push(Number(i.toFixed(0)));
       }
 
-      if (usage[u] == this.usageMax) {
-        this.usageMaxThreads.push(Number(u.toFixed(0)));
+      if (usage[i] === this.usageMax) {
+        this.usageMaxThreads.push(Number(i.toFixed(0)));
       }
     }
 
@@ -195,13 +196,13 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
     this.tempMax = Number(Math.max(...temps).toFixed(0));
     this.tempMinThreads = [];
     this.tempMaxThreads = [];
-    for (let t = 0; t < temps.length; t++) {
-      if (temps[t] == this.tempMin) {
-        this.tempMinThreads.push(Number(t.toFixed(0)));
+    for (let i = 0; i < temps.length; i++) {
+      if (temps[i] === this.tempMin) {
+        this.tempMinThreads.push(Number(i.toFixed(0)));
       }
 
-      if (temps[t] == this.tempMax) {
-        this.tempMaxThreads.push(Number(t.toFixed(0)));
+      if (temps[i] === this.tempMax) {
+        this.tempMaxThreads.push(Number(i.toFixed(0)));
       }
     }
   }
@@ -254,8 +255,8 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
 
       const options: ChartOptions = {
         events: ['mousemove', 'mouseout'],
-        onHover: (e: MouseEvent) => {
-          if (e.type == 'mouseout') {
+        onHover: (event: MouseEvent) => {
+          if (event.type === 'mouseout') {
             this.legendData = null;
             this.legendIndex = null;
           }
@@ -266,7 +267,7 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
           intersect: true,
           callbacks: {
             label: (tt: ChartTooltipItem, data: ChartData) => {
-              if (this.screenType.toLowerCase() == 'mobile') {
+              if (this.screenType.toLowerCase() === 'mobile') {
                 this.legendData = null;
                 this.legendIndex = null;
                 return;
@@ -296,7 +297,6 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
         },
         scales: {
           xAxes: [{
-            maxBarThickness: 16,
             type: 'category',
             labels: this.labels,
           } as any],
@@ -328,12 +328,6 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
     this.renderChart();
   }
 
-  coresChartUpdate(): void {
-    this.chart.load({
-      columns: this.cpuData.data,
-    });
-  }
-
   protected makeDatasets(data: (string | number)[][]): ChartDataSets[] {
     const datasets: ChartDataSets[] = [];
     const labels: string[] = [];
@@ -350,14 +344,15 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
         backgroundColor: '',
         borderColor: '',
         borderWidth: 1,
+        maxBarThickness: 16,
       };
 
       const accent = this.themeService.isDefaultTheme ? 'orange' : 'accent';
       let color;
-      if (accent !== 'accent' && ds.label == 'Temperature') {
+      if (accent !== 'accent' && ds.label === 'Temperature') {
         color = accent;
       } else {
-        const cssVar = ds.label == 'Temperature' ? accent : 'primary';
+        const cssVar = ds.label === 'Temperature' ? accent : 'primary';
         color = this.stripVar(this.currentTheme[cssVar]);
       }
 
@@ -369,10 +364,6 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
     });
 
     return datasets;
-  }
-
-  private processThemeColors(theme: Theme): string[] {
-    return theme.accentColors.map((color) => theme[color]);
   }
 
   rgbToString(rgb: string[], alpha?: number): string {
@@ -391,7 +382,7 @@ export class WidgetCpuComponent extends WidgetComponent implements AfterViewInit
     const valueType = this.utils.getValueType(txtColor);
 
     // convert to rgb
-    const rgb = valueType == 'hex' ? this.utils.hexToRgb(txtColor).rgb : this.utils.rgbToArray(txtColor);
+    const rgb = valueType === 'hex' ? this.utils.hexToRgb(txtColor).rgb : this.utils.rgbToArray(txtColor);
 
     // return rgba
     const rgba = 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + opacity + ')';

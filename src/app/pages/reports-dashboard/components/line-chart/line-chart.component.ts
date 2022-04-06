@@ -6,12 +6,11 @@ import { utcToZonedTime } from 'date-fns-tz';
 import Dygraph, { dygraphs } from 'dygraphs';
 // eslint-disable-next-line
 import smoothPlotter from 'dygraphs/src/extras/smooth-plotter.js';
-import { BehaviorSubject } from 'rxjs';
 import { ThemeUtils } from 'app/core/classes/theme-utils/theme-utils';
-import { ViewComponent } from 'app/core/components/view/view.component';
-import { CoreService } from 'app/core/services/core-service/core.service';
 import { ReportingData } from 'app/interfaces/reporting.interface';
-import { ThemeService, Theme } from 'app/services/theme/theme.service';
+import { Theme } from 'app/interfaces/theme.interface';
+import { CoreService } from 'app/services/core-service/core.service';
+import { ThemeService } from 'app/services/theme/theme.service';
 import { Report } from '../report/report.component';
 
 interface Conversion {
@@ -26,7 +25,7 @@ interface Conversion {
   templateUrl: './line-chart.component.html',
   styleUrls: ['./line-chart.component.scss'],
 })
-export class LineChartComponent extends ViewComponent implements AfterViewInit, OnDestroy, OnChanges {
+export class LineChartComponent implements AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('wrapper', { static: true }) el: ElementRef;
   @Input() chartId: string;
   @Input() chartColors: string[];
@@ -55,24 +54,10 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
 
   chart: Dygraph;
   conf: any;
-  columns: any;
-  linechartData: any;
 
   units = '';
   yLabelPrefix: string;
   showLegendValues = false;
-  legendEvent$: BehaviorSubject<any>;
-  legendLabel$: BehaviorSubject<any>;
-  legendAnalytic$: BehaviorSubject<any>;
-
-  _colorPattern: string[] = ['#2196f3', '#009688', '#ffc107', '#9c27b0', '#607d8b', '#00bcd4', '#8bc34a', '#ffeb3b', '#e91e63', '#3f51b5'];
-  get colorPattern(): string[] {
-    return this.chartColors;
-  }
-
-  set colorPattern(value) {
-    this._colorPattern = value;
-  }
 
   theme: Theme;
   timeFormat = '%H:%M';
@@ -80,14 +65,11 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
   controlUid: string;
 
   private utils: ThemeUtils;
+  private _data: ReportingData;
 
   constructor(private core: CoreService, public themeService: ThemeService) {
-    super();
     this.utils = new ThemeUtils();
     this.controlUid = 'chart_' + UUID.UUID();
-    this.legendEvent$ = new BehaviorSubject({ xHTML: '' });
-    this.legendLabel$ = new BehaviorSubject([]);
-    this.legendAnalytic$ = new BehaviorSubject([]);
   }
 
   render(update?: boolean): void {
@@ -109,18 +91,18 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
 
     const fg2 = this.themeService.currentTheme().fg2;
     const fg2Type = this.utils.getValueType(fg2);
-    const fg2Rgb = fg2Type == 'hex' ? this.utils.hexToRgb(this.themeService.currentTheme().fg2).rgb : this.utils.rgbToArray(fg2);
+    const fg2Rgb = fg2Type === 'hex' ? this.utils.hexToRgb(this.themeService.currentTheme().fg2).rgb : this.utils.rgbToArray(fg2);
     const gridLineColor = 'rgba(' + fg2Rgb[0] + ', ' + fg2Rgb[1] + ', ' + fg2Rgb[2] + ', 0.25)';
     const yLabelSuffix = this.labelY === 'Bits/s' ? this.labelY.toLowerCase() : this.labelY;
 
     // TODO: Try: dygraphs.Options
-    const options = {
+    const options: dygraphs.Options = {
       drawPoints: false, // Must be disabled for smoothPlotter
       pointSize: 1,
       includeZero: true,
       highlightCircleSize: 4,
       strokeWidth: 1,
-      colors: this.colorPattern,
+      colors: this.chartColors,
       labels, // time axis
       ylabel: this.yLabelPrefix + yLabelSuffix,
       gridLineColor,
@@ -136,7 +118,7 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
           },
         },
       },
-      legendFormatter: (data: any) => {
+      legendFormatter: (data: dygraphs.LegendData) => {
         const getSuffix = (converted: Conversion): string => {
           if (converted.shortName !== undefined) {
             return converted.shortName;
@@ -145,8 +127,8 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
           return converted.suffix !== undefined ? converted.suffix : '';
         };
 
-        const clone = { ...data };
-        clone.series.forEach((item: any, index: number) => {
+        const clone = { ...data } as any;
+        clone.series.forEach((item: dygraphs.SeriesLegendData, index: number) => {
           if (!item.y) { return; }
           const converted = this.formatLabelValue(item.y, this.inferUnits(this.labelY), 1, true);
           const suffix = getSuffix(converted);
@@ -165,12 +147,12 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
         return '';
       },
       series: () => {
-        const s: any = {};
+        const series: any = {};
         this.data.legend.forEach((item) => {
-          s[item] = { plotter: smoothPlotter };
+          series[item] = { plotter: smoothPlotter };
         });
 
-        return s;
+        return series;
       },
       drawCallback: (dygraph: any) => {
         if (dygraph.axes_) {
@@ -195,21 +177,9 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
     }
   }
 
-  makeColumn(data: ReportingData, legendKey: any): number[] {
-    const result: any = [];
-
-    data.data.forEach((report) => {
-      // TODO: Incorrect type
-      const value = (report as any)[legendKey];
-      result.push(value);
-    });
-
-    return result;
-  }
-
   protected makeTimeAxis(rd: ReportingData): any[] {
-    const structure = this.library == 'chart.js' ? 'columns' : 'rows';
-    if (structure == 'rows') {
+    const structure = this.library === 'chart.js' ? 'columns' : 'rows';
+    if (structure === 'rows') {
       // Push dates to row based data...
       const rows = [];
       // Add legend with axis to beginning of array
@@ -232,7 +202,7 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
       }
 
       return rows;
-    } if (structure == 'columns') {
+    } if (structure === 'columns') {
       const columns = [];
 
       for (let i = 0; i < rd.data.length; i++) {
@@ -242,19 +212,6 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
 
       return columns;
     }
-  }
-
-  private processThemeColors(theme: Theme): string[] {
-    this.theme = theme;
-    return theme.accentColors.map((color) => theme[color]);
-  }
-
-  private createColorObject(): Record<string, string> {
-    const obj: Record<string, string> = {};
-    this.legends.forEach((item, index) => {
-      obj[item] = this.colorPattern[index];
-    });
-    return obj;
   }
 
   fetchData(rrdOptions: { start: number; end: number }, timeformat?: string, culling?: number): void {
@@ -286,7 +243,7 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
       units = 'bits';
     }
 
-    if (typeof units == 'undefined') {
+    if (typeof units === 'undefined') {
       console.warn('Could not infer units from ' + this.labelY);
     }
 
@@ -344,25 +301,25 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
     let output: number = value;
     let shortName = '';
 
-    if (value > tera || (prefixRules && this.yLabelPrefix == 'Tera')) {
+    if (value > tera || (prefixRules && this.yLabelPrefix === 'Tera')) {
       prefix = 'Tera';
       shortName = 'TiB';
       output = value / tera;
-    } else if ((value < tera && value > giga) || (prefixRules && this.yLabelPrefix == 'Giga')) {
+    } else if ((value < tera && value > giga) || (prefixRules && this.yLabelPrefix === 'Giga')) {
       prefix = 'Giga';
       shortName = 'GiB';
       output = value / giga;
-    } else if ((value < giga && value > mega) || (prefixRules && this.yLabelPrefix == 'Mega')) {
+    } else if ((value < giga && value > mega) || (prefixRules && this.yLabelPrefix === 'Mega')) {
       prefix = 'Mega';
       shortName = 'MiB';
       output = value / mega;
-    } else if ((value < mega && value > kilo || (prefixRules && this.yLabelPrefix == 'Kilo'))) {
+    } else if ((value < mega && value > kilo) || (prefixRules && this.yLabelPrefix === 'Kilo')) {
       prefix = 'Kilo';
       shortName = 'KB';
       output = value / kilo;
     }
 
-    if (units == 'bits') {
+    if (units === 'bits') {
       shortName = shortName.replace(/i/, '').trim();
       shortName = ` ${shortName.charAt(0).toUpperCase()}${shortName.substr(1).toLowerCase()}`; // Kb, Mb, Gb, Tb
     }
@@ -381,7 +338,6 @@ export class LineChartComponent extends ViewComponent implements AfterViewInit, 
 
     if (changes.data) {
       if (this.chart) {
-        // this.chart.destroy();
         this.render(true);
       } else {
         this.render();// make an update method?

@@ -2,24 +2,35 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
-import { MaterialModule } from 'app/app-material.module';
 import { CommonDirectivesModule } from 'app/directives/common/common-directives.module';
+import { CastModule } from 'app/modules/cast/cast.module';
+import { IxFormsModule } from 'app/modules/ix-forms/ix-forms.module';
 import { TooltipModule } from 'app/modules/tooltip/tooltip.module';
+import { AuthorizedAccessFormComponent } from 'app/pages/sharing/iscsi/authorized-access/authorized-access-form/authorized-access-form.component';
+import { AuthorizedAccessListComponent } from 'app/pages/sharing/iscsi/authorized-access/authorized-access-list/authorized-access-list.component';
+import { TargetGlobalConfigurationComponent } from 'app/pages/sharing/iscsi/target-global-configuration/target-global-configuration.component';
 import { UserService } from 'app/services/user.service';
-import { EntityFormService } from '../common/entity/entity-form/services/entity-form.service';
-import { EntityModule } from '../common/entity/entity.module';
+import { EntityFormService } from '../../modules/entity/entity-form/services/entity-form.service';
+import { EntityModule } from '../../modules/entity/entity.module';
 import { SharesDashboardComponent } from './components/shares-dashboard/shares-dashboard.component';
 import { AssociatedTargetFormComponent } from './iscsi/associated-target/associated-target-form/associated-target-form.component';
 import { AssociatedTargetListComponent } from './iscsi/associated-target/associated-target-list/associated-target-list.component';
-import { AuthorizedAccessFormComponent } from './iscsi/authorizedaccess/authorizedaccess-form/authorizedaccess-form.component';
-import { AuthorizedAccessListComponent } from './iscsi/authorizedaccess/authorizedaccess-list/authorizedaccess-list.component';
 import { ExtentFormComponent } from './iscsi/extent/extent-form/extent-form.component';
 import { ExtentListComponent } from './iscsi/extent/extent-list/extent-list.component';
 import { FibreChannelPortComponent } from './iscsi/fibre-channel-ports/fibre-channel-port/fibre-channel-port.component';
 import { FibreChannelPortsComponent } from './iscsi/fibre-channel-ports/fibre-channel-ports.component';
-import { GlobalconfigurationComponent } from './iscsi/globalconfiguration/globalconfiguration.component';
-import { DynamicListComponent } from './iscsi/initiator/initiator-form/dynamic-list/dynamic-list-component';
+import { DynamicListComponent } from './iscsi/initiator/initiator-form/dynamic-list/dynamic-list.component';
 import { InitiatorFormComponent } from './iscsi/initiator/initiator-form/initiator-form.component';
 import { InitiatorListComponent } from './iscsi/initiator/initiator-list/initiator-list.component';
 import { IscsiWizardComponent } from './iscsi/iscsi-wizard/iscsi-wizard.component';
@@ -28,12 +39,12 @@ import { PortalFormComponent } from './iscsi/portal/portal-form/portal-form.comp
 import { PortalListComponent } from './iscsi/portal/portal-list/portal-list.component';
 import { TargetFormComponent } from './iscsi/target/target-form/target-form.component';
 import { TargetListComponent } from './iscsi/target/target-list/target-list.component';
-import { NFSFormComponent } from './nfs/nfs-form/nfs-form.component';
-import { NFSListComponent } from './nfs/nfs-list/nfs-list.component';
+import { NfsFormComponent } from './nfs/nfs-form/nfs-form.component';
+import { NfsListComponent } from './nfs/nfs-list/nfs-list.component';
 import { routing } from './sharing.routing';
-import { SMBAclComponent } from './smb/smb-acl/smb-acl.component';
-import { SMBFormComponent } from './smb/smb-form/smb-form.component';
-import { SMBListComponent } from './smb/smb-list/smb-list.component';
+import { SmbAclComponent } from './smb/smb-acl/smb-acl.component';
+import { SmbFormComponent } from './smb/smb-form/smb-form.component';
+import { SmbListComponent } from './smb/smb-list/smb-list.component';
 import { WebdavFormComponent } from './webdav/webdav-form/webdav-form.component';
 import { WebdavListComponent } from './webdav/webdav-list/webdav-list.component';
 
@@ -44,24 +55,35 @@ import { WebdavListComponent } from './webdav/webdav-list/webdav-list.component'
     ReactiveFormsModule,
     routing,
     EntityModule,
-    MaterialModule,
     TranslateModule,
+    MatProgressBarModule,
+    MatTabsModule,
+    MatCardModule,
+    MatIconModule,
     FlexLayoutModule,
+    MatListModule,
+    MatMenuModule,
+    MatFormFieldModule,
+    MatTooltipModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
     CommonDirectivesModule,
     TooltipModule,
+    CastModule,
+    IxFormsModule,
   ],
   declarations: [
-    NFSListComponent,
-    NFSFormComponent,
+    NfsListComponent,
+    NfsFormComponent,
     SharesDashboardComponent,
     WebdavListComponent,
     WebdavFormComponent,
-    SMBListComponent,
-    SMBFormComponent,
-    SMBAclComponent,
+    SmbListComponent,
+    SmbFormComponent,
+    SmbAclComponent,
     IscsiComponent,
     IscsiWizardComponent,
-    GlobalconfigurationComponent,
+    TargetGlobalConfigurationComponent,
     PortalListComponent,
     PortalFormComponent,
     DynamicListComponent,
@@ -82,7 +104,6 @@ import { WebdavListComponent } from './webdav/webdav-list/webdav-list.component'
     EntityFormService,
     UserService,
   ],
-  entryComponents: [FibreChannelPortComponent],
 })
 export class SharingModule {
 }

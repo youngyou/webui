@@ -1,7 +1,7 @@
 import { Validators } from '@angular/forms';
 import { marker as T } from '@biesbjerg/ngx-translate-extract-marker';
-import { rangeValidator } from 'app/pages/common/entity/entity-form/validators/range-validation';
-import { regexValidator } from 'app/pages/common/entity/entity-form/validators/regex-validation';
+import { rangeValidator } from 'app/modules/entity/entity-form/validators/range-validation';
+import { regexValidator } from 'app/modules/entity/entity-form/validators/regex-validation';
 
 export const helptextSystemEmail = {
   fieldsets: {
@@ -70,11 +70,11 @@ export const helptextSystemEmail = {
   send_mail_method: {
     placeholder: T('Send Mail Method'),
     smtp: {
-      placeholder: T('SMTP'),
+      placeholder: 'SMTP',
       tooltip: T('Enable SMTP configuration'),
     },
     gmail: {
-      placeholder: T('GMail OAuth'),
+      placeholder: 'GMail OAuth',
       tooltip: T('Enable GMail OAuth authentication.'),
     },
   },

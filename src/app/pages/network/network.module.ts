@@ -2,23 +2,35 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NgxUploaderModule } from 'ngx-uploader';
-import { MaterialModule } from 'app/app-material.module';
-import { CoreService } from 'app/core/services/core-service/core.service';
 import { CommonDirectivesModule } from 'app/directives/common/common-directives.module';
 import { CastModule } from 'app/modules/cast/cast.module';
-import { IxFormsModule } from 'app/pages/common/ix-forms/ix-forms.module';
-import { StaticRouteFormComponent } from 'app/pages/network/static-route-form/static-route-form.component';
+import { IxFormsModule } from 'app/modules/ix-forms/ix-forms.module';
+import { NetworkConfigurationComponent } from 'app/pages/network/components/configuration/configuration.component';
+import {
+  DownloadClientConfigModalComponent,
+} from 'app/pages/network/components/download-client-config-modal/download-client-config-modal.component';
+import {
+  NetworkConfigurationCardComponent,
+} from 'app/pages/network/components/network-configuration-card/network-configuration-card.component';
+import { OpenVpnServerConfigComponent } from 'app/pages/network/components/open-vpn-server-config/open-vpn-server-config.component';
+import { StaticRouteFormComponent } from 'app/pages/network/components/static-route-form/static-route-form.component';
 import { NetworkService } from 'app/services';
-import { EntityFormService } from '../common/entity/entity-form/services/entity-form.service';
-import { EntityModule } from '../common/entity/entity.module';
-import { CardWidgetComponent } from './card-widget/card-widget.component';
-import { ConfigurationComponent } from './forms/configuration.component';
-import { InterfacesFormComponent } from './forms/interfaces-form.component';
-import { IpmiFormComponent } from './forms/ipmi-form.component';
-import { OpenvpnClientComponent } from './forms/service-openvpn-client.component';
-import { OpenvpnServerComponent } from './forms/service-openvpn-server.component';
+import { CoreService } from 'app/services/core-service/core.service';
+import { EntityFormService } from '../../modules/entity/entity-form/services/entity-form.service';
+import { EntityModule } from '../../modules/entity/entity.module';
+import { InterfacesFormComponent } from './components/forms/interfaces-form.component';
+import { IpmiFormComponent } from './components/forms/ipmi-form.component';
+import { OpenvpnClientComponent } from './components/forms/service-openvpn-client.component';
 import { NetworkComponent } from './network.component';
 import { routing } from './network.routing';
 
@@ -30,24 +42,32 @@ import { routing } from './network.routing';
     ReactiveFormsModule,
     NgxUploaderModule,
     routing,
-    MaterialModule,
+    MatCardModule,
+    MatListModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatToolbarModule,
     FlexLayoutModule,
     TranslateModule,
     CommonDirectivesModule,
     IxFormsModule,
     CastModule,
+    MatDialogModule,
   ],
   declarations: [
     StaticRouteFormComponent,
     InterfacesFormComponent,
-    ConfigurationComponent,
+    NetworkConfigurationComponent,
     IpmiFormComponent,
     NetworkComponent,
-    CardWidgetComponent,
     OpenvpnClientComponent,
-    OpenvpnServerComponent,
+    OpenVpnServerConfigComponent,
+    NetworkConfigurationCardComponent,
+    DownloadClientConfigModalComponent,
   ],
-  providers: [NetworkService, EntityFormService, CoreService],
+  providers: [NetworkService, EntityFormService, CoreService, TranslateService],
 })
 export class NetworkModule {
 }

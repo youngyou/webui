@@ -7,10 +7,6 @@
   padding: 8px 16px !important;
 }
 
-.external-link {
-  color: #396f9d;
-}
-
 .copyright-txt {
   align-self: flex-end;
   font-size: 11px;
@@ -50,6 +46,10 @@
   text-align: center;
 }
 
+.external-link:focus-visible {
+  background: var(--hover-bg) !important;
+}
+
 
 /* NARROW SCREENS */
 .xs.widget {
@@ -60,4 +60,8 @@
 
 .xs.widget .mat-card {
   overflow-y: scroll;
+}
+
+::ng-deep a:focus-visible {
+  background: var(--hover-bg);
 }

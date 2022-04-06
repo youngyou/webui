@@ -35,6 +35,10 @@
   color: var(--primary-txt) !important;
 }
 
+.widget .left button.mat-button:focus-visible {
+  outline-width: 0;
+}
+
 .view-overview .mat-card-title-text {
   margin-left: calc(40% + 16px) !important;
 }
@@ -237,10 +241,6 @@ img.clickable,
 
 .platform-logo-wrapper.core .mat-icon {
   height: 2.25rem;
-}
-
-.platform-logo-wrapper .mat-icon.retro {
-  height: 2.4rem;
 }
 
 .product-image.rackmount {

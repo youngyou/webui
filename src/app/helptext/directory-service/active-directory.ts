@@ -67,7 +67,7 @@ export default {
   activedirectory_dns_updates_tooltip: T('Set to enable Samba to do DNS updates when joining a domain.'),
 
   activedirectory_disable_fn_cache_name: 'disable_freenas_cache',
-  activedirectory_disable_fn_cache_placeholder: T('Disable FreeNAS Cache'),
+  activedirectory_disable_fn_cache_placeholder: T('Disable AD User / Group Cache'),
   activedirectory_disable_fn_cache_tooltip: T('Set to disable caching AD users and groups. This can\
  help when unable to bind to a domain with a large number of users or groups.'),
 
@@ -93,7 +93,7 @@ export default {
   activedirectory_kerberos_principal_tooltip: T('Select the location of the principal in the \
  keytab created in <b>Directory Services > Kerberos Keytabs</b>.'),
 
-  computer_account_OU_name: T('createcomputer'),
+  computer_account_OU_name: 'createcomputer',
   computer_account_OU_placeholder: T('Computer Account OU'),
   computer_account_OU_tooltip: T('The OU in which new computer accounts are created. \
  The OU string is read from top to bottom without RDNs. Slashes ("/") are used as \

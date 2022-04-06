@@ -1,5 +1,5 @@
 import {
-  Component, AfterViewInit, Input, ViewChild, OnDestroy, ElementRef,
+  Component, AfterViewInit, Input, OnDestroy, ElementRef,
 } from '@angular/core';
 import { MediaObserver } from '@angular/flex-layout';
 import {
@@ -13,13 +13,13 @@ import { Chart, ChartColor, ChartDataSets } from 'chart.js';
 import { Subject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ThemeUtils } from 'app/core/classes/theme-utils/theme-utils';
-import { ViewChartBarComponent } from 'app/core/components/view-chart-bar/view-chart-bar.component';
-import { ViewChartGaugeComponent } from 'app/core/components/view-chart-gauge/view-chart-gauge.component';
 import { CoreEvent } from 'app/interfaces/events';
 import { MemoryStatsEventData } from 'app/interfaces/events/memory-stats-event.interface';
+import { Theme } from 'app/interfaces/theme.interface';
 import { WidgetComponent } from 'app/pages/dashboard/components/widget/widget.component';
 import { WidgetMemoryData } from 'app/pages/dashboard/interfaces/widget-data.interface';
-import { Theme } from 'app/services/theme/theme.service';
+import { CoreService } from 'app/services/core-service/core.service';
+import { ThemeService } from 'app/services/theme/theme.service';
 
 @UntilDestroy()
 @Component({
@@ -28,8 +28,6 @@ import { Theme } from 'app/services/theme/theme.service';
   styleUrls: ['./widget-memory.component.scss'],
 })
 export class WidgetMemoryComponent extends WidgetComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('memorygauge', { static: true }) cpuLoad: ViewChartGaugeComponent;
-  @ViewChild('cores', { static: true }) cpuCores: ViewChartBarComponent;
   @Input() data: Subject<CoreEvent>;
   @Input() ecc = false;
   chart: Chart;// chart instance
@@ -69,13 +67,15 @@ export class WidgetMemoryComponent extends WidgetComponent implements AfterViewI
     private sanitizer: DomSanitizer,
     public mediaObserver: MediaObserver,
     private el: ElementRef<HTMLElement>,
+    private core: CoreService,
+    public themeService: ThemeService,
   ) {
     super(translate);
 
     this.utils = new ThemeUtils();
 
     mediaObserver.media$.pipe(untilDestroyed(this)).subscribe((evt) => {
-      const st = evt.mqAlias == 'xs' ? 'Mobile' : 'Desktop';
+      const st = evt.mqAlias === 'xs' ? 'Mobile' : 'Desktop';
       this.screenType = st;
     });
   }
@@ -85,12 +85,12 @@ export class WidgetMemoryComponent extends WidgetComponent implements AfterViewI
   }
 
   ngAfterViewInit(): void {
-    this.core.register({ observerClass: this, eventName: 'ThemeChanged' })
+    this.core.register({ observerClass: this })
       .pipe(
         switchMap(() => this.data),
         untilDestroyed(this),
       ).subscribe((evt: CoreEvent) => {
-        if (evt.name == 'MemoryStats') {
+        if (evt.name === 'MemoryStats') {
           if (!evt.data.used) {
             return;
           }
@@ -227,7 +227,7 @@ export class WidgetMemoryComponent extends WidgetComponent implements AfterViewI
       const bgColor = this.colorPattern[index];
       const bgColorType = this.utils.getValueType(bgColor);
 
-      const bgRgb = bgColorType == 'hex' ? this.utils.hexToRgb(bgColor).rgb : this.utils.rgbToArray(bgColor);
+      const bgRgb = bgColorType === 'hex' ? this.utils.hexToRgb(bgColor).rgb : this.utils.rgbToArray(bgColor);
 
       (ds.backgroundColor as ChartColor[]).push(this.rgbToString(bgRgb, 0.85));
       (ds.borderColor as ChartColor[]).push(this.rgbToString(bgRgb));

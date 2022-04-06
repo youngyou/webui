@@ -4,26 +4,26 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateService } from '@ngx-translate/core';
 import * as _ from 'lodash';
-import { CoreService } from 'app/core/services/core-service/core.service';
 import { DatasetType } from 'app/enums/dataset-type.enum';
 import { ProductType } from 'app/enums/product-type.enum';
 import { VmBootloader, VmDeviceType } from 'app/enums/vm.enum';
 import helptext from 'app/helptext/vm/devices/device-add-edit';
 import { CoreEvent } from 'app/interfaces/events';
+import { AppLoaderService } from 'app/modules/app-loader/app-loader.service';
 import {
   FieldConfig,
   FormSelectConfig,
   FormComboboxConfig,
   FormComboboxOption,
-} from 'app/pages/common/entity/entity-form/models/field-config.interface';
-import { EntityFormService } from 'app/pages/common/entity/entity-form/services/entity-form.service';
-import { EntityUtils } from 'app/pages/common/entity/utils';
+} from 'app/modules/entity/entity-form/models/field-config.interface';
+import { EntityFormService } from 'app/modules/entity/entity-form/services/entity-form.service';
+import { EntityUtils } from 'app/modules/entity/utils';
 import { ZvolWizardComponent } from 'app/pages/storage/volumes/zvol/zvol-wizard/zvol-wizard.component';
 import { VmDeviceFieldSet } from 'app/pages/vm/vm-device-field-set.interface';
 import {
-  WebSocketService, NetworkService, VmService, StorageService,
+  WebSocketService, NetworkService, VmService,
 } from 'app/services';
-import { AppLoaderService } from 'app/services/app-loader/app-loader.service';
+import { CoreService } from 'app/services/core-service/core.service';
 import { DialogService } from 'app/services/dialog.service';
 import { ModalService } from 'app/services/modal.service';
 
@@ -31,7 +31,7 @@ import { ModalService } from 'app/services/modal.service';
 @Component({
   selector: 'app-device-add',
   templateUrl: './device-add.component.html',
-  styleUrls: ['../../../common/entity/entity-form/entity-form.component.scss'],
+  styleUrls: ['../../../../modules/entity/entity-form/entity-form.component.scss'],
 })
 export class DeviceAddComponent implements OnInit, OnDestroy {
   protected addCall = 'vm.device.create' as const;
@@ -39,7 +39,7 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
   vmid: number;
   vmname: string;
   fieldSets: VmDeviceFieldSet[];
-  isCustActionVisible = false;
+  isCustomActionVisible = false;
   selectedType = VmDeviceType.Cdrom;
   formGroup: FormGroup;
   activeFormGroup: FormGroup;
@@ -51,7 +51,7 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
   displayFormGroup: FormGroup;
   rootpwd: FieldConfig;
   boot: FieldConfig;
-  custActions: { id?: string; name: string; function: () => void }[];
+  customActions: { id?: string; name: string; function: () => void }[];
   error: string;
   private productType = window.localStorage.getItem('product_type') as ProductType;
 
@@ -347,7 +347,6 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
     protected networkService: NetworkService,
     protected vmService: VmService,
     private modalService: ModalService,
-    private storageService: StorageService,
   ) {}
 
   preInit(): void {
@@ -384,7 +383,8 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
         label: evt.data.id, value: '/dev/zvol/' + evt.data.id,
       };
       const pathField = _.find(this.diskFieldConfig, { name: 'path' }) as FormSelectConfig;
-      pathField.options.splice(pathField.options.findIndex((o) => o.value === 'new'), 0, newZvol);
+      const newOption = pathField.options.findIndex((option) => option.value === 'new');
+      pathField.options.splice(newOption, 0, newZvol);
 
       this.diskFormGroup.controls['path'].setValue(newZvol.value);
     });
@@ -467,28 +467,28 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
       switch (deviceType) {
         case VmDeviceType.Cdrom:
           this.activeFormGroup = this.cdromFormGroup;
-          this.isCustActionVisible = false;
+          this.isCustomActionVisible = false;
           break;
         case VmDeviceType.Nic:
           this.activeFormGroup = this.nicFormGroup;
-          this.isCustActionVisible = true;
+          this.isCustomActionVisible = true;
           this.generateRandomMac();
           break;
         case VmDeviceType.Disk:
           this.activeFormGroup = this.diskFormGroup;
-          this.isCustActionVisible = false;
+          this.isCustomActionVisible = false;
           break;
         case VmDeviceType.Raw:
           this.activeFormGroup = this.rawfileFormGroup;
-          this.isCustActionVisible = false;
+          this.isCustomActionVisible = false;
           break;
         case VmDeviceType.Pci:
           this.activeFormGroup = this.pciFormGroup;
-          this.isCustActionVisible = false;
+          this.isCustomActionVisible = false;
           break;
         case VmDeviceType.Display:
           this.activeFormGroup = this.displayFormGroup;
-          this.isCustActionVisible = false;
+          this.isCustomActionVisible = false;
           break;
       }
     });
@@ -511,10 +511,10 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
           },
         );
       });
-      const config = _.find(this.diskFieldConfig, { name: 'path' }) as FormSelectConfig;
+      const config = _.find(this.diskFieldConfig, { name: 'path' }) as FormComboboxConfig;
       config.options.push({
         label: 'Add New', value: 'new', sticky: 'bottom',
-      } as any);
+      });
     });
     // if bootloader == 'GRUB' or bootloader == "UEFI_CSM" or if VM has existing Display device, hide Display option.
     this.ws.call('vm.query', [[['id', '=', this.vmid]]]).pipe(untilDestroyed(this)).subscribe((vm) => {
@@ -533,7 +533,7 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
           this.displayFormGroup.controls['type'].setValue(typeField.options[0].value);
         }
       }
-      // if type == 'Container Provider' and rawfile boot device exists, hide rootpwd and boot fields.
+      // if type === 'Container Provider' and rawfile boot device exists, hide rootpwd and boot fields.
       if (_.find(vm[0].devices, { dtype: VmDeviceType.Raw }) && (vm[0] as any).type === 'Container Provider') {
         vm[0].devices.forEach((element) => {
           if (element.dtype === VmDeviceType.Raw) {
@@ -548,7 +548,7 @@ export class DeviceAddComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.custActions = [
+    this.customActions = [
       {
         id: 'generate_mac_address',
         name: this.translate.instant('Generate MAC Address'),

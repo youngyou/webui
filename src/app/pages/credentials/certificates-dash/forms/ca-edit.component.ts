@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
@@ -8,14 +9,10 @@ import { helptextSystemCa } from 'app/helptext/system/ca';
 import { helptextSystemCertificates } from 'app/helptext/system/certificates';
 import { CertificateAuthority } from 'app/interfaces/certificate-authority.interface';
 import { FormConfiguration } from 'app/interfaces/entity-form.interface';
-import { Option } from 'app/interfaces/option.interface';
 import { QueryFilter } from 'app/interfaces/query-api.interface';
-import { WebsocketError } from 'app/interfaces/websocket-error.interface';
-import { DialogFormConfiguration } from 'app/pages/common/entity/entity-dialog/dialog-form-configuration.interface';
-import { EntityDialogComponent } from 'app/pages/common/entity/entity-dialog/entity-dialog.component';
-import { FieldConfig, FormParagraphConfig } from 'app/pages/common/entity/entity-form/models/field-config.interface';
-import { FieldSet } from 'app/pages/common/entity/entity-form/models/fieldset.interface';
-import { EntityUtils } from 'app/pages/common/entity/utils';
+import { FieldConfig, FormParagraphConfig } from 'app/modules/entity/entity-form/models/field-config.interface';
+import { FieldSet } from 'app/modules/entity/entity-form/models/fieldset.interface';
+import { EntityUtils } from 'app/modules/entity/utils';
 import {
   WebSocketService, AppLoaderService, StorageService, DialogService, SystemGeneralService,
 } from 'app/services';
@@ -35,7 +32,6 @@ export class CertificateAuthorityEditComponent implements FormConfiguration {
   private rowNum: number;
   title: string;
   private incomingData: CertificateAuthority;
-  private unsignedCAs: Option[] = [];
 
   fieldConfig: FieldConfig[];
   fieldSets: FieldSet[] = [
@@ -202,9 +198,16 @@ export class CertificateAuthorityEditComponent implements FormConfiguration {
     },
   ];
 
-  constructor(protected ws: WebSocketService, protected loader: AppLoaderService,
-    private modalService: ModalService, private storage: StorageService, private http: HttpClient,
-    private dialog: DialogService, private systemGeneralService: SystemGeneralService) {
+  constructor(
+    protected ws: WebSocketService,
+    protected loader: AppLoaderService,
+    private modalService: ModalService,
+    private storage: StorageService,
+    private http: HttpClient,
+    private dialog: DialogService,
+    private systemGeneralService: SystemGeneralService,
+    private matDialog: MatDialog,
+  ) {
     this.getRow = this.modalService.getRow$.pipe(untilDestroyed(this)).subscribe((rowId: number) => {
       this.rowNum = rowId;
       this.queryCallOption = [['id', '=', rowId]];
@@ -218,62 +221,24 @@ export class CertificateAuthorityEditComponent implements FormConfiguration {
     return data;
   }
 
-  signCSRFormConf: DialogFormConfiguration = {
-    title: helptextSystemCa.list.action_sign,
-    fieldConfig: [{
-      type: 'select',
-      name: 'csr_cert_id',
-      placeholder: helptextSystemCa.sign.csr_cert_id.placeholder,
-      tooltip: helptextSystemCa.sign.csr_cert_id.tooltip,
-      required: true,
-      options: this.unsignedCAs,
-    },
-    {
-      type: 'input',
-      name: 'name',
-      placeholder: helptextSystemCa.sign.name.placeholder,
-      tooltip: helptextSystemCa.sign.name.tooltip,
-    }],
-    method_ws: 'certificateauthority.ca_sign_csr',
-    saveButtonText: helptextSystemCa.sign.sign,
-    customSubmit: (entityDialog) => this.doSignCsr(entityDialog),
-  };
-
-  custActions = [
-    {
-      id: 'sign_CSR',
-      name: helptextSystemCertificates.edit.signCSR,
-      function: () => {
-        this.systemGeneralService.getUnsignedCertificates().pipe(untilDestroyed(this)).subscribe((res) => {
-          res.forEach((item) => {
-            this.unsignedCAs.push(
-              { label: item.name, value: item.id },
-            );
-          });
-          this.dialog.dialogForm(this.signCSRFormConf);
-        });
-      },
-    },
-  ];
-
   setForm(): void {
     const fields: (keyof CertificateAuthority)[] = [
       'country', 'state', 'city', 'organization', 'organizational_unit', 'email', 'common', 'DN', 'cert_type',
       'root_path', 'digest_algorithm', 'key_length', 'key_type', 'until', 'revoked', 'signed_certificates', 'lifetime',
     ];
     fields.forEach((field) => {
-      const paragraph: FormParagraphConfig = _.find(this.fieldConfig, { name: field });
+      const paragraph = _.find(this.fieldConfig, { name: field }) as FormParagraphConfig;
       if (this.incomingData[field] || this.incomingData[field] === false) {
         paragraph.paraText += this.incomingData[field];
       } else {
         paragraph.paraText += '---';
       }
     });
-    const config: FormParagraphConfig = _.find(this.fieldConfig, { name: 'san' });
+    const config = _.find(this.fieldConfig, { name: 'san' }) as FormParagraphConfig;
     config.paraText += this.incomingData.san.join(',');
-    const issuer: FormParagraphConfig = _.find(this.fieldConfig, { name: 'issuer' });
+    const issuer = _.find(this.fieldConfig, { name: 'issuer' }) as FormParagraphConfig;
     if (_.isObject(this.incomingData.issuer)) {
-      issuer.paraText += (this.incomingData.issuer as any).name;
+      issuer.paraText += this.incomingData.issuer.name;
     } else if (this.incomingData.issuer) {
       issuer.paraText += this.incomingData.issuer;
     } else {
@@ -283,23 +248,6 @@ export class CertificateAuthorityEditComponent implements FormConfiguration {
 
   afterInit(): void {
     this.title = helptextSystemCa.edit.title;
-  }
-
-  doSignCsr(entityDialog: EntityDialogComponent): void {
-    const payload = {
-      ca_id: this.rowNum,
-      csr_cert_id: entityDialog.formGroup.controls.csr_cert_id.value,
-      name: entityDialog.formGroup.controls.name.value,
-    };
-    entityDialog.loader.open();
-    entityDialog.ws.call('certificateauthority.ca_sign_csr', [payload]).pipe(untilDestroyed(this)).subscribe(() => {
-      entityDialog.loader.close();
-      this.dialog.closeAllDialogs();
-      this.modalService.refreshTable();
-    }, (err: WebsocketError) => {
-      entityDialog.loader.close();
-      this.dialog.errorReport(helptextSystemCa.error, err.reason, err.trace.formatted);
-    });
   }
 
   viewCertificate(): void {

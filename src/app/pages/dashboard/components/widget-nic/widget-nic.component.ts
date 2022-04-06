@@ -15,17 +15,28 @@ import { NetworkInterfaceAlias } from 'app/interfaces/network-interface.interfac
 import { DashboardNicState } from 'app/pages/dashboard/components/dashboard/dashboard.component';
 import { WidgetComponent } from 'app/pages/dashboard/components/widget/widget.component';
 import { WidgetUtils } from 'app/pages/dashboard/utils/widget-utils';
+import { CoreService } from 'app/services/core-service/core.service';
 
 interface NetTraffic {
   sent: string;
   sentUnits: string;
   received: string;
   receivedUnits: string;
+  linkState: LinkState;
 }
 
 interface Slide {
   name: string;
   index?: string;
+}
+
+enum Path {
+  Overview = 'overview',
+  Empty = 'empty',
+  Addresses = 'addresses',
+  Vlans = 'vlans',
+  Interfaces = 'interfaces',
+  VlanAddresses = 'vlan addresses',
 }
 
 @UntilDestroy()
@@ -45,21 +56,22 @@ export class WidgetNicComponent extends WidgetComponent implements AfterViewInit
 
   readonly LinkState = LinkState;
   readonly NetworkInterfaceAliasType = NetworkInterfaceAliasType;
+  readonly PathEnum = Path;
 
   get currentSlideName(): string {
     return this.path[parseInt(this.currentSlide)].name;
   }
 
   get previousSlide(): number {
-    return this.currentSlide == '0' ? 0 : parseInt(this.currentSlide) - 1;
+    return this.currentSlide === '0' ? 0 : parseInt(this.currentSlide) - 1;
   }
 
   title = 'Interface';
 
   path: Slide[] = [
-    { name: this.translate.instant('overview') },
-    { name: this.translate.instant('empty') },
-    { name: this.translate.instant('empty') },
+    { name: this.PathEnum.Overview },
+    { name: this.PathEnum.Empty },
+    { name: this.PathEnum.Empty },
   ];
 
   get ipAddresses(): NetworkInterfaceAlias[] {
@@ -70,12 +82,24 @@ export class WidgetNicComponent extends WidgetComponent implements AfterViewInit
     });
   }
 
-  get linkState(): string {
-    if (!this.nicState && !this.nicState.aliases) { return ''; }
-    return this.nicState.link_state.replace(/_/g, ' ');
+  get linkState(): LinkState {
+    if (!this.nicState && !this.nicState.aliases) { return null; }
+    if (!this.traffic) {
+      return this.nicState.link_state;
+    }
+    return this.traffic.linkState;
   }
 
-  constructor(public router: Router, public translate: TranslateService) {
+  get linkStateLabel(): string {
+    if (!this.linkState) { return ''; }
+    return this.linkState.replace(/_/g, ' ');
+  }
+
+  constructor(
+    public router: Router,
+    public translate: TranslateService,
+    private core: CoreService,
+  ) {
     super(translate);
     this.configurable = false;
     this.utils = new WidgetUtils();
@@ -88,13 +112,13 @@ export class WidgetNicComponent extends WidgetComponent implements AfterViewInit
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.nicState) {
-      this.title = this.currentSlide == '0' ? 'Interface' : this.nicState.name;
+      this.title = this.currentSlide === '0' ? 'Interface' : this.nicState.name;
     }
   }
 
   ngAfterViewInit(): void {
     this.stats.pipe(untilDestroyed(this)).subscribe((evt: CoreEvent) => {
-      if (evt.name == 'NetTraffic_' + this.nicState.name) {
+      if (evt.name === 'NetTraffic_' + this.nicState.name) {
         const sent = this.utils.convert(evt.data.sent_bytes_rate);
         const received = this.utils.convert(evt.data.received_bytes_rate);
 
@@ -103,13 +127,14 @@ export class WidgetNicComponent extends WidgetComponent implements AfterViewInit
           sentUnits: sent.units,
           received: received.value,
           receivedUnits: received.units,
+          linkState: evt.data.link_state as LinkState,
         };
       }
     });
   }
 
   updateSlide(name: string, verified: boolean, slideIndex: number, dataIndex?: number): void {
-    if (name !== 'overview' && !verified) { return; }
+    if (name !== this.PathEnum.Overview && !verified) { return; }
     const slide: Slide = {
       name,
       index: typeof dataIndex !== 'undefined' ? dataIndex.toString() : null,
@@ -120,7 +145,7 @@ export class WidgetNicComponent extends WidgetComponent implements AfterViewInit
   }
 
   updateSlidePosition(value: number): void {
-    if (value.toString() == this.currentSlide) { return; }
+    if (value.toString() === this.currentSlide) { return; }
     const carousel = this.carouselParent.nativeElement.querySelector('.carousel');
     const slide = this.carouselParent.nativeElement.querySelector('.slide');
 
@@ -134,11 +159,11 @@ export class WidgetNicComponent extends WidgetComponent implements AfterViewInit
     }).start(el.set);
 
     this.currentSlide = value.toString();
-    this.title = this.currentSlide == '0' ? 'Interface' : this.nicState.name;
+    this.title = this.currentSlide === '0' ? 'Interface' : this.nicState.name;
   }
 
   vlanAliases(vlanIndex: string | number): NetworkInterfaceAlias[] {
-    if (typeof vlanIndex == 'string') { vlanIndex = parseInt(vlanIndex); }
+    if (typeof vlanIndex === 'string') { vlanIndex = parseInt(vlanIndex); }
     const vlan = this.nicState.vlans[vlanIndex];
     return vlan.aliases.filter((item) => {
       return [NetworkInterfaceAliasType.Inet, NetworkInterfaceAliasType.Inet6].includes(item.type);
