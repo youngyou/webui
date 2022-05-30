@@ -211,6 +211,32 @@ export class VmWizardComponent implements WizardConfiguration {
           tooltip: helptext.threads.tooltip,
         },
         {
+          type: 'input',
+          name: 'cpuset',
+          placeholder: helptext.cpuset.placeholder,
+          tooltip: helptext.cpuset.tooltip,
+          validation: [Validators.pattern('^((\\d+)|(\\d+-\\d+))(,((\\d+)|(\\d+-\\d+)))*$')],
+          required: false,
+        },
+        {
+          type: 'checkbox',
+          name: 'pin_vcpus',
+          placeholder: helptext.pin_vcpus.placeholder,
+          tooltip: helptext.pin_vcpus.tooltip,
+          value: false,
+          disabled: true,
+          relation: [
+            {
+              action: RelationAction.Enable,
+              when: [{
+                name: 'cpuset',
+                operator: '>',
+                value: '',
+              }],
+            },
+          ],
+        },
+        {
           type: 'select',
           name: 'cpu_mode',
           placeholder: helptext.cpu_mode.placeholder,
@@ -273,6 +299,14 @@ export class VmWizardComponent implements WizardConfiguration {
           blurEvent: () => this.blurEventForMemory(),
           parent: this,
           tooltip: helptext.memory_tooltip,
+        },
+        {
+          type: 'input',
+          name: 'nodeset',
+          placeholder: helptext.nodeset.placeholder,
+          tooltip: helptext.nodeset.tooltip,
+          validation: [Validators.pattern('^((\\d+)|(\\d+-\\d+))(,((\\d+)|(\\d+-\\d+)))*$')],
+          required: false,
         },
         {
           type: 'paragraph',
@@ -485,7 +519,7 @@ export class VmWizardComponent implements WizardConfiguration {
     private translate: TranslateService,
     protected modalService: ModalService,
     private store$: Store<AppState>,
-  ) {}
+  ) { }
 
   preInit(entityWizard: EntityWizardComponent): void {
     this.entityWizard = entityWizard;
