@@ -136,6 +136,10 @@
   min-width: fit-content;
   position: relative;
 
+  &[hidden] {
+    display: none !important;
+  }
+
   &:hover {
     background-color: var(--hover-bg);
   }

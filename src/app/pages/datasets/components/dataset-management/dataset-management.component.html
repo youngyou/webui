@@ -36,7 +36,7 @@
       </div>
       <div>
         <div fxLayout="row" fxLayoutAlign="start center">
-          {{ node.roles.join(', ') }}
+          {{ node.extra.roles.join(', ') }}
         </div>
       </div>
     </div>
@@ -66,6 +66,7 @@
             [ixTreeNodeDefDataSource]="dataSource"
             [class.selected]="node.item.name === selectedDataset?.name"
             (click)="onDatasetSelected(node.item)"
+            [hidden]="!node.visible"
           >
             <button mat-icon-button disabled></button>
             <ng-container [ngTemplateOutlet]="nodeLabel" [ngTemplateOutletContext]="{ $implicit: node }"></ng-container>
@@ -79,6 +80,7 @@
               class="dataset-nested-tree-root-node"
               (click)="onDatasetSelected(node.item)"
               [class.selected]="node.item.name === selectedDataset?.name"
+              [hidden]="!node.visible"
             >
               <button
                 mat-icon-button
