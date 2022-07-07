@@ -151,7 +151,15 @@ export class ChartFormComponent implements OnDestroy {
   }
 
   addFormControls(chartSchemaNode: ChartSchemaNode): void {
-    this.subscription.add(this.appSchemaService.addFormControls(chartSchemaNode, this.form, this.config));
+    this.subscription.add(
+      this.appSchemaService.addFormControls(
+        chartSchemaNode,
+        this.form,
+        this.config,
+        chartSchemaNode.schema.immutable,
+        this.isNew,
+      ),
+    );
   }
 
   addFormSchema(chartSchemaNode: ChartSchemaNode, group: string): void {
