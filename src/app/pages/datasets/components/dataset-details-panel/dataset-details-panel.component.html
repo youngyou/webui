@@ -32,5 +32,8 @@
     [dataset]="dataset"
     [parentDataset]="parentDataset"
   ></ix-zfs-encryption-card>
+  <ix-dataset-snapshot-details
+    [dataset]="dataset"
+  ></ix-dataset-snapshot-details>
   <ix-dataset-capacity-management-card [dataset]="dataset" *ngIf="isCapacityAllowed"></ix-dataset-capacity-management-card>
 </div>

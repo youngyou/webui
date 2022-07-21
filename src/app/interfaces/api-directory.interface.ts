@@ -678,6 +678,7 @@ export type ApiDirectory = {
   'pool.dataset.processes': { params: [datasetId: string]; response: Process[] };
   'pool.dataset.promote': { params: [id: string]; response: void };
   'pool.dataset.query': { params: QueryParams<Dataset, ExtraDatasetQueryOptions>; response: Dataset[] };
+  'pool.dataset.summary': { params: [id: string]; response: unknown };
   'pool.dataset.query_encrypted_roots_keys': { params: void; response: DatasetEncryptedRootKeys };
   'pool.dataset.recommended_zvol_blocksize': { params: [name: string]; response: DatasetRecordSize };
   'pool.dataset.set_quota': { params: [dataset: string, quotas: SetDatasetQuota[]]; response: void };
