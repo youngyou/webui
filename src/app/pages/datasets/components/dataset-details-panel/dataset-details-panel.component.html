@@ -24,13 +24,18 @@
   </div>
 </div>
 
-<div class="cards">
+<div class="cards column-wrap-container">
   <ix-dataset-details-card [dataset]="dataset"></ix-dataset-details-card>
-  <ix-permissions-card [dataset]="dataset" *ngIf="hasPermissions && !dataset.locked"></ix-permissions-card>
   <ix-zfs-encryption-card
     *ngIf="isEncryptionAllowed"
     [dataset]="dataset"
     [parentDataset]="parentDataset"
   ></ix-zfs-encryption-card>
+
+  <!-- Testing out 6 cards -->
+  <ix-permissions-card [dataset]="dataset" *ngIf="hasPermissions && !dataset.locked"></ix-permissions-card>
+  <ix-permissions-card [dataset]="dataset" *ngIf="hasPermissions && !dataset.locked"></ix-permissions-card>
+
+  <ix-dataset-capacity-management-card [dataset]="dataset" *ngIf="isCapacityAllowed"></ix-dataset-capacity-management-card>
   <ix-dataset-capacity-management-card [dataset]="dataset" *ngIf="isCapacityAllowed"></ix-dataset-capacity-management-card>
 </div>

@@ -1,21 +1,70 @@
 @import '~assets/styles/mixins/animations';
 @import '~assets/styles/mixins/buttons';
 
+$card-width: 520px;
+$breakpoint-hidden: 1495px; // Anything narrower than this, we hide details
+$breakpoint-singlecolumn: 1496px; // Use Grid
+$breakpoint-dualcolumn: 2027px; // Use Grid
+$breakpoint-flex: 2600px; // Switch to Flexbox and spill to the right
+
 @mixin details-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+
+  // GRID 
+  display: grid;
+  grid-template-columns: auto;
+  overflow-y: auto;
+
+  // Too small
+  @media (max-width: $breakpoint-hidden) {
+    display: none;
+  }
+
+  // One Column
+  @media (min-width: $breakpoint-singlecolumn) and (max-width: calc($breakpoint-dualcolumn - 1px)) {
+    border: solid 1px red;
+    display: grid;
+    grid-template-columns: auto;
+    place-content: start;
+  }
+
+  // Two Columns
+  @media (min-width: $breakpoint-dualcolumn) and (max-width: calc($breakpoint-flex - 1px)) {
+    border: solid 1px green;
+    display: grid;
+    grid-template-columns: auto auto;
+  }
+
+  // Switch to Flexbox wrapping columns
+  @media  (min-width: $breakpoint-flex) {
+    align-items: flex-start;
+    border: solid 1px violet;
+    display: flex;
+    flex-direction: column;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 12px;
+    place-content: flex-start;
+  }
+
+  @media  (min-width: $breakpoint-flex) and (min-height: 1000px) {
+    height: calc(100vh - 260px);
+    min-height: unset;
+  }
+
+  @media  (min-width: $breakpoint-flex) and (max-height: 999px) {
+    height: 900px;
+  }
 
   > * {
-    flex: 1;
-    max-width: 620px;
-    min-width: 420px;
+    min-width: $card-width;
+    width: auto;
   }
 }
 
 @mixin details-card {
   border: none;
   border-radius: 0;
+
 
   mat-card-header {
     align-items: center;
