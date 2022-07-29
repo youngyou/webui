@@ -997,6 +997,9 @@ export class VmWizardComponent implements WizardConfiguration {
     vmPayload['shutdown_timeout'] = value.shutdown_timeout;
     vmPayload['autoloader'] = value.autoloader;
     vmPayload['autostart'] = value.autostart;
+    vmPayload['cpuset'] = value.cpuset;
+    vmPayload['nodeset'] = value.nodeset;
+    vmPayload['pin_vcpus'] = value.pin_vcpus;
     if (value.iso_path && value.iso_path !== undefined) {
       vmPayload['devices'] = [
         {
