@@ -31,6 +31,7 @@ import { DatasetQuotaEditFormComponent } from 'app/pages/datasets/components/dat
 import { DatasetQuotasGrouplistComponent } from 'app/pages/datasets/components/dataset-quotas/dataset-quotas-grouplist/dataset-quotas-grouplist.component';
 import { DatasetQuotasUserlistComponent } from 'app/pages/datasets/components/dataset-quotas/dataset-quotas-userlist/dataset-quotas-userlist.component';
 import { DeleteDatasetDialogComponent } from 'app/pages/datasets/components/delete-dataset-dialog/delete-dataset-dialog.component';
+import { RolesCardComponent } from 'app/pages/datasets/components/roles-card/roles-card.component.component';
 import { ZvolFormComponent } from 'app/pages/datasets/components/zvol-form/zvol-form.component';
 import { routing } from 'app/pages/datasets/datasets.routing';
 import { EncryptionModule } from 'app/pages/datasets/modules/encryption/encryption.module';
@@ -83,6 +84,7 @@ import { SpaceManagementChartComponent } from './components/space-management-cha
     DatasetDetailsPanelComponent,
     DatasetCapacityManagementCardComponent,
     DatasetNodeComponent,
+    RolesCardComponent,
     DatasetQuotaAddFormComponent,
     DatasetQuotaEditFormComponent,
     DatasetQuotasUserlistComponent,
