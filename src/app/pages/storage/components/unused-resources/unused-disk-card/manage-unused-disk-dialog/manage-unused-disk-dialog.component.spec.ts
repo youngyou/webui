@@ -11,7 +11,7 @@ import { IxFormsModule } from 'app/modules/ix-forms/ix-forms.module';
 import { IxFormHarness } from 'app/modules/ix-forms/testing/ix-form.harness';
 import {
   ManageUnusedDiskDialogResource,
-} from 'app/pages/storage/components/unused-disk-card/manage-unused-disk-dialog/manage-unused-disk-dialog.interface';
+} from 'app/pages/storage/components/unused-resources/unused-disk-card/manage-unused-disk-dialog/manage-unused-disk-dialog.interface';
 import { ManageUnusedDiskDialogComponent } from './manage-unused-disk-dialog.component';
 
 describe('ManageUnusedDiskDialogComponent', () => {

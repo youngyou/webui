@@ -3,7 +3,7 @@ import { createComponentFactory, Spectator } from '@ngneat/spectator/jest';
 import { Pool } from 'app/interfaces/pool.interface';
 import { Disk } from 'app/interfaces/storage.interface';
 import { IxFormsModule } from 'app/modules/ix-forms/ix-forms.module';
-import { TopologyCardComponent } from 'app/pages/storage/components/pools-dashboard/topology-card/topology-card.component';
+import { TopologyCardComponent } from 'app/pages/storage/components/dashboard-pool/components/topology-card/topology-card.component';
 
 describe('TopologyCardComponent', () => {
   let spectator: Spectator<TopologyCardComponent>;
