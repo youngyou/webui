@@ -12,11 +12,11 @@ import { mockCall, mockJob, mockWebsocket } from 'app/core/testing/utils/mock-we
 import helptext from 'app/helptext/storage/volumes/volume-list';
 import { Pool } from 'app/interfaces/pool.interface';
 import { SnackbarService } from 'app/modules/snackbar/services/snackbar.service';
+import { DiskHealthCardComponent } from 'app/pages/storage/components/dashboard-pool/components/disk-health-card/disk-health-card.component';
 import {
   ExportDisconnectModalComponent,
 } from 'app/pages/storage/components/dashboard-pool/components/export-disconnect-modal/export-disconnect-modal.component';
 import { DashboardPoolComponent } from 'app/pages/storage/components/dashboard-pool/dashboard-pool.component';
-import { DiskHealthCardComponent } from 'app/pages/storage/components/disk-health-card/disk-health-card.component';
 import {
   PoolUsageCardComponent,
 } from 'app/pages/storage/components/pools-dashboard/pool-usage-card/pool-usage-card.component';
