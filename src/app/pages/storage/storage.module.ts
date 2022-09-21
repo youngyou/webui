@@ -48,9 +48,9 @@ import { routing } from 'app/pages/storage/storage.routing';
 import { PoolsDashboardStore } from 'app/pages/storage/stores/pools-dashboard-store.service';
 import { DiskHealthCardComponent } from './components/dashboard-pool/components/disk-health-card/disk-health-card.component';
 import { ExportDisconnectModalComponent } from './components/dashboard-pool/components/export-disconnect-modal/export-disconnect-modal.component';
+import { AutotrimDialogComponent } from './components/dashboard-pool/components/zfs-health-card/autotrim-dialog/autotrim-dialog.component';
+import { ZfsHealthCardComponent } from './components/dashboard-pool/components/zfs-health-card/zfs-health-card.component';
 import { DashboardPoolComponent } from './components/dashboard-pool/dashboard-pool.component';
-import { AutotrimDialogComponent } from './components/zfs-health-card/autotrim-dialog/autotrim-dialog.component';
-import { ZfsHealthCardComponent } from './components/zfs-health-card/zfs-health-card.component';
 
 @NgModule({
   imports: [

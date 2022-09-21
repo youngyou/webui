@@ -19,7 +19,7 @@ import { Pool, PoolScanUpdate } from 'app/interfaces/pool.interface';
 import { PoolScan } from 'app/interfaces/resilver-job.interface';
 import {
   AutotrimDialogComponent,
-} from 'app/pages/storage/components/zfs-health-card/autotrim-dialog/autotrim-dialog.component';
+} from 'app/pages/storage/components/dashboard-pool/components/zfs-health-card/autotrim-dialog/autotrim-dialog.component';
 import { PoolsDashboardStore } from 'app/pages/storage/stores/pools-dashboard-store.service';
 import { DialogService, WebSocketService } from 'app/services';
 import { ZfsHealthCardComponent } from './zfs-health-card.component';

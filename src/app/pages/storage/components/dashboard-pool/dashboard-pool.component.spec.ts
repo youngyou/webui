@@ -16,6 +16,7 @@ import { DiskHealthCardComponent } from 'app/pages/storage/components/dashboard-
 import {
   ExportDisconnectModalComponent,
 } from 'app/pages/storage/components/dashboard-pool/components/export-disconnect-modal/export-disconnect-modal.component';
+import { ZfsHealthCardComponent } from 'app/pages/storage/components/dashboard-pool/components/zfs-health-card/zfs-health-card.component';
 import { DashboardPoolComponent } from 'app/pages/storage/components/dashboard-pool/dashboard-pool.component';
 import {
   PoolUsageCardComponent,
@@ -23,7 +24,6 @@ import {
 import {
   TopologyCardComponent,
 } from 'app/pages/storage/components/pools-dashboard/topology-card/topology-card.component';
-import { ZfsHealthCardComponent } from 'app/pages/storage/components/zfs-health-card/zfs-health-card.component';
 import { PoolsDashboardStore } from 'app/pages/storage/stores/pools-dashboard-store.service';
 import { AppLoaderService, DialogService, WebSocketService } from 'app/services';
 
