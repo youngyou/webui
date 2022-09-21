@@ -7,7 +7,7 @@ import { TranslateService } from '@ngx-translate/core';
 import _ from 'lodash';
 import { EMPTY } from 'rxjs';
 import {
-  catchError, delay, filter, switchMap, tap,
+  catchError, filter, switchMap, tap,
 } from 'rxjs/operators';
 import { JobState } from 'app/enums/job-state.enum';
 import helptext from 'app/helptext/storage/volumes/volume-list';
@@ -17,7 +17,7 @@ import { Disk } from 'app/interfaces/storage.interface';
 import { SnackbarService } from 'app/modules/snackbar/services/snackbar.service';
 import {
   ExportDisconnectModalComponent,
-} from 'app/pages/storage/components/dashboard-pool/export-disconnect-modal/export-disconnect-modal.component';
+} from 'app/pages/storage/components/dashboard-pool/components/export-disconnect-modal/export-disconnect-modal.component';
 import { PoolsDashboardStore } from 'app/pages/storage/stores/pools-dashboard-store.service';
 import { AppLoaderService, DialogService, WebSocketService } from 'app/services';
 
@@ -56,9 +56,6 @@ export class DashboardPoolComponent implements OnInit {
     this.areDisksLoading = true;
     this.ws.call('disk.query', [[['pool', '=', this.pool.name]], { extra: { pools: true } }])
       .pipe(
-        // TODO: An ugly hack to make it less likely to not hit max concurrent requests error with too many pools.
-        // TODO: https://ixsystems.atlassian.net/browse/NAS-117846
-        delay(this.index * 400),
         untilDestroyed(this),
       ).subscribe({
         next: (disks) => {

@@ -46,8 +46,8 @@ import { UnusedDiskCardComponent } from 'app/pages/storage/components/unused-dis
 import { UnusedResourcesComponent } from 'app/pages/storage/components/unused-resources/unused-resources.component';
 import { routing } from 'app/pages/storage/storage.routing';
 import { PoolsDashboardStore } from 'app/pages/storage/stores/pools-dashboard-store.service';
+import { ExportDisconnectModalComponent } from './components/dashboard-pool/components/export-disconnect-modal/export-disconnect-modal.component';
 import { DashboardPoolComponent } from './components/dashboard-pool/dashboard-pool.component';
-import { ExportDisconnectModalComponent } from './components/dashboard-pool/export-disconnect-modal/export-disconnect-modal.component';
 import { DiskHealthCardComponent } from './components/disk-health-card/disk-health-card.component';
 import { AutotrimDialogComponent } from './components/zfs-health-card/autotrim-dialog/autotrim-dialog.component';
 import { ZfsHealthCardComponent } from './components/zfs-health-card/zfs-health-card.component';
